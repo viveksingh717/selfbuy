@@ -1,0 +1,9 @@
+.dataTables_filter input {
+    color: #000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.dataTables_filter label {
+    color: #000 !important;
+}

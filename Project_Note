@@ -1,0 +1,37 @@
+For Category Table:
+category name
+slug
+description
+image
+status
+popular
+meta tile
+meta description
+meta keyword
+
+Product Table:
+id
+product_name
+product_slug
+description
+short_description
+additional_description
+selling_price
+original_price
+product_image
+qty
+sku
+category_id
+subcategory_id
+brand
+tax
+coupon
+status
+is_featured
+is_available
+warranty
+meta_title
+meta_description
+
+Product_Attribute:
+
