@@ -18,6 +18,7 @@ return new class extends Migration
             $table->tinyInteger('status')->after('profile_photo')->default(1);
             $table->tinyInteger('role_type')->after('status')->default(1);
             $table->tinyInteger('is_verified')->after('role_type')->default(0);
+            $table->tinyInteger('terms')->after('role_type')->default(0);
         });
     }
 
@@ -27,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['phone_number', 'address', 'profile_photo', 'status', 'role_type', 'is_verified']);
+            $table->dropColumn(['phone_number', 'address', 'profile_photo', 'status', 'role_type', 'is_verified', 'terms']);
         });
     }
 };

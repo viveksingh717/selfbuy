@@ -11,12 +11,15 @@ use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/test', function () {
+    return view('emails.templates.order_email');
+});
 
 Route::post('/generate_slug', [CommonController::class, 'generate_slug'])->name('generate_slug');
 Route::prefix('admin')->group(function () {
@@ -33,6 +36,9 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['adminGuest'])->group(function () {
         Route::get('/login', [AuthController::class, 'login'])->name('admin.login');
         Route::post('/login_process', [AuthController::class, 'login_process'])->name('admin.login_process');
+        Route::get('/register', [AuthController::class, 'register'])->name('admin.register');
+        Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process');
+        Route::get('/terms_condition', [AuthController::class, 'term_condition'])->name('admin.terms_condition');
     });
 
     // Routes for authenticated admin users (adminAuth middleware applied)

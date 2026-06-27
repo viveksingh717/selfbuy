@@ -22,6 +22,14 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call(AdminUserSeeder::class);
-        $this->call(CategorySeeder::class);
+
+        // Demo data
+        $this->call(CategoryDemoSeeder::class);
+        $this->call(SubCategoryDemoSeeder::class);
+        $this->call(BrandDemoSeeder::class);
+        $this->call(BannerDemoSeeder::class);
+        $this->call(TaxDemoSeeder::class);
+        $this->call(CouponDemoSeeder::class);
+        $this->call(ProductDemoSeeder::class);
     }
 }

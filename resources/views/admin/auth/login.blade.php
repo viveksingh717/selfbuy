@@ -8,9 +8,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    {{-- <link rel="icon" href="faviconw.ico" type="image/x-icon" /> --}}
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon" title="SelfBuy">
 
-    <title>Admin|Login</title>
+    <title>Login</title>
 
     <!-- Bootstrap Core and vandor -->
     <link rel="stylesheet" href="{{ asset('admin_assets/plugins/bootstrap/css/bootstrap.min.css') }}" />
@@ -19,7 +20,7 @@
     <!-- Core css -->
     <link rel="stylesheet" href="{{ asset('admin_assets/css/main.css') }}" />
     <link rel="stylesheet" href="{{ asset('admin_assets/css/theme1.css') }}" />
-    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon" title="EchoCart">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon" title="SelfBuy">
 
 </head>
 
@@ -29,8 +30,8 @@
         <div class="auth_left">
             <div class="card">
                 <div class="text-center mb-2">
-                    <a class="header-brand" href="{{ route('admin.login') }}"> <img src="{{ asset('shopping.png') }}"
-                            alt="logo" width="35" height="35" style="object-fit: contain;"> Login</a>
+                    <a class="header-brand" href="{{ route('admin.login') }}"> <img src="{{ asset('selfbuy1.png') }}"
+                            alt="logo" width="75" height="75" style="object-fit: contain;"></a>
 
                 </div>
                 <div class="card-body">
@@ -40,7 +41,7 @@
                         @csrf
                         <div class="form-group">
                             <input type="email" class="form-control" name="email" id="email"
-                                value="{{ old('email') }}" placeholder="Enter email">
+                                value="{{ old('email', $rememberedEmail) }}" placeholder="Enter email">
                             @if ($errors->has('email'))
                                 <div class="text-danger">{{ $errors->first('email') }}</div>
                             @endif
@@ -57,7 +58,7 @@
                         <div class="form-group">
                             <label class="custom-control custom-checkbox">
                                 <input type="checkbox" class="custom-control-input" name="remember_me" value="1"
-                                    {{ old('remember_me') ? 'checked' : '' }} id="remember_me" />
+                                    {{ old('remember_me', $rememberedChecked) ? 'checked' : '' }} id="remember_me" />
                                 <span class="custom-control-label">Remember me</span>
                             </label>
                         </div>
@@ -68,7 +69,7 @@
                     </form>
                 </div>
                 <div class="text-center text-muted">
-                    Don't have account yet? <a href="javascript:void(0)">Sign up</a>
+                    Don't have account yet? <a href="{{ route('admin.register') }}">Sign up</a>
                 </div>
             </div>
         </div>
