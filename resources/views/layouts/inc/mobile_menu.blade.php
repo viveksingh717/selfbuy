@@ -14,18 +14,27 @@
                 <li class="active">
                     <a href="{{ route('home') }}">Home</a>
                 </li>
-                <li>
-                    <a href="category.html">Shop</a>
-                    <ul>
-                        <li><a href="#">Shop List</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="product.html" class="sf-with-ul">Product</a>
-                    <ul>
-                        <li><a href="product.html">Default</a></li>
-                    </ul>
-                </li>
+                @if (isset($mobileCategories) && $mobileCategories->isNotEmpty())
+                    @foreach ($mobileCategories as $category)
+                        <li>
+                            <a href="{{ url($category->category_slug) }}">
+                                {{ $category->category_name }}
+                                @if ($category->is_featured)
+                                    <span class="tip tip-new">New</span>
+                                @endif
+                            </a>
+                            @if ($category->subcategories->isNotEmpty())
+                                <ul>
+                                    @foreach ($category->subcategories as $subcategory)
+                                        <li><a
+                                                href="{{ url($category->category_slug . '/' . $subcategory->subcategory_slug) }}">{{ $subcategory->subcategory_name }}</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </li>
+                    @endforeach
+                @endif
             </ul>
         </nav><!-- End .mobile-nav -->
 

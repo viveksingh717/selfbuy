@@ -163,4 +163,43 @@ class CategoryService {
         }
     }
 
+    public function getSubCategoriesWithProductCounts($categoryId)
+    {
+        return SubCategory::query()
+            ->where('category_id', $categoryId)
+            ->where('status', 1)
+            ->withCount(['products' => function ($query) {
+                $query->where('status', 1);
+            }])
+            ->orderBy('subcategory_name')
+            ->get();
+    }
+
+    public function getCategoryBySlug($slug)
+    {
+        return Category::where('category_slug', $slug)
+            ->where('status', 1)
+            ->first();
+    }
+
+    public function getSubCategoryBySlug($slug)
+    {
+        return SubCategory::where('subcategory_slug', $slug)
+            ->where('status', 1)
+            ->first();
+    }
+
+    // public function getCategoryBySlug($slug, $slug2)
+    // {
+    //     return Category::with([
+    //         'subcategories' => function ($query) use ($slug2) {
+    //             $query->where('subcategory_slug', $slug2)
+    //                 ->where('status', 1);
+    //         }
+    //     ])
+    //     ->where('category_slug', $slug)
+    //     ->where('status', 1)
+    //     ->first();
+    // }
+
 }

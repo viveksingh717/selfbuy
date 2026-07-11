@@ -360,6 +360,58 @@ class ProductService {
         return ProductModel::with(['galleryImages', 'attributes'])->find($id);
     }
 
+    public function getProductsByCategory($categoryId, $subCategoryId = null, array $filters = [], $perPage = 2)
+    {
+        $query = ProductModel::query()
+            ->with(['category', 'subCategory'])
+            ->where('category_id', $categoryId)
+            ->where('status', 1);
+
+        if (!empty($subCategoryId)) {
+            $query->where('sub_category_id', $subCategoryId);
+        }
+
+        if (!empty($filters['brand_ids'])) {
+            $query->whereIn('brand_id', $filters['brand_ids']);
+        }
+
+        if (!empty($filters['color_ids'])) {
+            $query->whereHas('attributes', function ($q) use ($filters) {
+                $q->whereIn('color_id', $filters['color_ids']);
+            });
+        }
+
+        if (!empty($filters['size_ids'])) {
+            $query->whereHas('attributes', function ($q) use ($filters) {
+                $q->whereIn('size_id', $filters['size_ids']);
+            });
+        }
+
+        if (is_numeric($filters['min_price'] ?? null)) {
+            $query->where('selling_price', '>=', $filters['min_price']);
+        }
+
+        if (is_numeric($filters['max_price'] ?? null)) {
+            $query->where('selling_price', '<=', $filters['max_price']);
+        }
+
+        switch ($filters['sort'] ?? 'latest') {
+            case 'price_low':
+                $query->orderBy('selling_price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('selling_price', 'desc');
+                break;
+            case 'name':
+                $query->orderBy('product_name', 'asc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
     public function getActiveBrands()
     {
         return Brand::query()
