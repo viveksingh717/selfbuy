@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/product/{slug}', [ShopController::class, 'productDetails'])->name('product.details');
+Route::get('/search', [ShopController::class, 'search'])->name('search');
 Route::get('/{slug?}/{slug2?}', [ShopController::class, 'index'])->name('shop');
 
 Route::get('/test', function () {

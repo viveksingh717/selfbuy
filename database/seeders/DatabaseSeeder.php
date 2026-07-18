@@ -31,5 +31,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TaxDemoSeeder::class);
         $this->call(CouponDemoSeeder::class);
         $this->call(ProductDemoSeeder::class);
+        $this->call(ProductAttributeDemoSeeder::class);
     }
 }

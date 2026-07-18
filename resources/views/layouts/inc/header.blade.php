@@ -129,7 +129,8 @@
                                     <div class="col-md-6">
                                         <div class="banner banner-overlay">
                                             <a href="category.html">
-                                                <img src="assets/images/menu/banner-2.jpg" alt="Banner">
+                                                <img src="{{ asset('assets/images/menu/banner-2.jpg') }}"
+                                                    alt="Banner">
 
                                                 <div class="banner-content banner-content-bottom">
                                                     <div class="banner-title text-white">New
@@ -150,11 +151,11 @@
                 <div class="header-search">
                     <a href="#" class="search-toggle" role="button" title="Search"><i
                             class="icon-search"></i></a>
-                    <form action="#" method="get">
+                    <form action="{{ route('search') }}" method="get">
                         <div class="header-search-wrapper">
                             <label for="q" class="sr-only">Search</label>
                             <input type="search" class="form-control" name="q" id="q"
-                                placeholder="Search in..." required>
+                                value="{{ request('q') }}" placeholder="Search products..." required>
                         </div><!-- End .header-search-wrapper -->
                     </form>
                 </div><!-- End .header-search -->
@@ -182,7 +183,8 @@
 
                                 <figure class="product-image-container">
                                     <a href="product.html" class="product-image">
-                                        <img src="assets/images/products/cart/product-1.jpg" alt="product">
+                                        <img src="{{ asset('assets/images/products/cart/product-1.jpg') }}"
+                                            alt="product">
                                     </a>
                                 </figure>
                                 <a href="#" class="btn-remove" title="Remove Product"><i
@@ -203,7 +205,8 @@
 
                                 <figure class="product-image-container">
                                     <a href="product.html" class="product-image">
-                                        <img src="assets/images/products/cart/product-2.jpg" alt="product">
+                                        <img src="{{ asset('assets/images/products/cart/product-2.jpg') }}"
+                                            alt="product">
                                     </a>
                                 </figure>
                                 <a href="#" class="btn-remove" title="Remove Product"><i

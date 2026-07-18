@@ -360,6 +360,33 @@ class ProductService {
         return ProductModel::with(['galleryImages', 'attributes'])->find($id);
     }
 
+    public function getProductBySlug($slug)
+    {
+        return ProductModel::with([
+                'category',
+                'subCategory',
+                'brand',
+                'galleryImages',
+                'attributes.color',
+                'attributes.size',
+            ])
+            ->where('product_slug', $slug)
+            ->where('status', 1)
+            ->first();
+    }
+
+    public function getRelatedProducts(ProductModel $product, $limit = 6)
+    {
+        return ProductModel::query()
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('status', 1)
+            ->orderByRaw('sub_category_id = ? DESC', [$product->sub_category_id])
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get();
+    }
+
     public function getProductsByCategory($categoryId, $subCategoryId = null, array $filters = [], $perPage = 2)
     {
         $query = ProductModel::query()
@@ -371,6 +398,40 @@ class ProductService {
             $query->where('sub_category_id', $subCategoryId);
         }
 
+        $this->applyProductFilters($query, $filters);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function searchProducts($term, array $filters = [], $perPage = 12)
+    {
+        $query = ProductModel::query()
+            ->with(['category', 'subCategory'])
+            ->where('status', 1)
+            ->where(function ($q) use ($term) {
+                $q->where('product_name', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%")
+                  ->orWhere('short_description', 'like', "%{$term}%")
+                  ->orWhereHas('category', function ($q) use ($term) {
+                      $q->where('category_name', 'like', "%{$term}%");
+                  })
+                  ->orWhereHas('subCategory', function ($q) use ($term) {
+                      $q->where('subcategory_name', 'like', "%{$term}%");
+                  });
+            });
+
+        $this->applyProductFilters($query, $filters);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    public function emptyProductPaginator($perPage = 12)
+    {
+        return ProductModel::query()->whereRaw('1 = 0')->paginate($perPage);
+    }
+
+    private function applyProductFilters($query, array $filters)
+    {
         if (!empty($filters['brand_ids'])) {
             $query->whereIn('brand_id', $filters['brand_ids']);
         }
@@ -408,8 +469,6 @@ class ProductService {
             default:
                 $query->orderBy('created_at', 'desc');
         }
-
-        return $query->paginate($perPage)->withQueryString();
     }
 
     public function getActiveBrands()
