@@ -391,6 +391,7 @@ class ProductService {
     {
         $query = ProductModel::query()
             ->with(['category', 'subCategory'])
+            ->withCount('attributes')
             ->where('category_id', $categoryId)
             ->where('status', 1);
 
@@ -407,6 +408,7 @@ class ProductService {
     {
         $query = ProductModel::query()
             ->with(['category', 'subCategory'])
+            ->withCount('attributes')
             ->where('status', 1)
             ->where(function ($q) use ($term) {
                 $q->where('product_name', 'like', "%{$term}%")

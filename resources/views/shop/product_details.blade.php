@@ -27,6 +27,12 @@
     $availableColors = $product->attributes->pluck('color')->filter()->unique('id')->values();
     $availableSizes = $product->attributes->pluck('size')->filter()->unique('id')->values();
     $inStock = $product->stock_status === 'in_stock' && $product->qty > 0;
+
+    // Not every color/size combination is necessarily stocked — map each size to the colors it actually comes in.
+    $sizeColorMap = $product->attributes
+        ->filter(fn ($a) => $a->size_id && $a->color_id)
+        ->groupBy('size_id')
+        ->map(fn ($group) => $group->pluck('color_id')->unique()->implode(','));
 @endphp
 
 @section('content')
@@ -123,7 +129,7 @@
                                             <select name="size" id="size" class="form-control">
                                                 <option value="" selected="selected">Select a size</option>
                                                 @foreach ($availableSizes as $size)
-                                                    <option value="{{ $size->id }}">{{ $size->size_name }}</option>
+                                                    <option value="{{ $size->id }}" data-color-ids="{{ $sizeColorMap[$size->id] ?? '' }}">{{ $size->size_name }}</option>
                                                 @endforeach
                                             </select>
                                         </div><!-- End .select-custom -->
@@ -140,7 +146,8 @@
                                 </div><!-- End .details-filter-row -->
 
                                 <div class="product-details-action">
-                                    <a href="#" class="btn-product btn-cart {{ $inStock ? '' : 'disabled' }}">
+                                    <a href="#" id="add-to-cart-btn" data-product-id="{{ $product->id }}"
+                                        class="btn-product btn-cart {{ $inStock ? '' : 'disabled' }}">
                                         <span>{{ $inStock ? 'add to cart' : 'out of stock' }}</span>
                                     </a>
 
@@ -300,12 +307,17 @@
         $(function () {
             var variantAttributes = {!! json_encode($product->attributes->map(function ($a) {
                 return [
+                    'id' => $a->id,
                     'color_id' => $a->color_id,
                     'size_id' => $a->size_id,
                     'extra_price' => (float) $a->extra_price,
                     'stock' => (int) $a->stock,
                 ];
             })->values()) !!};
+
+            var hasVariants = variantAttributes.length > 0;
+            var hasColors = {{ $availableColors->isNotEmpty() ? 'true' : 'false' }};
+            var hasSizes = {{ $availableSizes->isNotEmpty() ? 'true' : 'false' }};
 
             var baseSelling = {{ (float) $product->selling_price }};
             var baseOriginal = {{ (float) $product->original_price }};
@@ -350,6 +362,33 @@
                 }
             }
 
+            var sizeSelect = document.getElementById('size');
+
+            // Not every color comes in every size — hide size options that don't exist for the selected color.
+            function filterSizesForColor(colorId) {
+                if (!sizeSelect) {
+                    return;
+                }
+
+                Array.prototype.forEach.call(sizeSelect.options, function (opt) {
+                    if (!opt.value) {
+                        return;
+                    }
+
+                    var allowedColors = (opt.dataset.colorIds || '').split(',').filter(Boolean).map(Number);
+                    var allowed = allowedColors.indexOf(colorId) !== -1;
+                    opt.disabled = !allowed;
+                    opt.hidden = !allowed;
+                });
+
+                var currentOption = sizeSelect.options[sizeSelect.selectedIndex];
+
+                if (currentOption && currentOption.disabled) {
+                    sizeSelect.value = '';
+                    selectedSizeId = null;
+                }
+            }
+
             document.querySelectorAll('#color-swatches a').forEach(function (el) {
                 el.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -358,16 +397,70 @@
                     });
                     this.classList.add('active');
                     selectedColorId = parseInt(this.dataset.colorId, 10);
+                    filterSizesForColor(selectedColorId);
                     updatePrice();
                 });
             });
-
-            var sizeSelect = document.getElementById('size');
 
             if (sizeSelect) {
                 sizeSelect.addEventListener('change', function () {
                     selectedSizeId = this.value ? parseInt(this.value, 10) : null;
                     updatePrice();
+                });
+
+                if (selectedColorId !== null) {
+                    filterSizesForColor(selectedColorId);
+                }
+            }
+
+            var addToCartBtn = document.getElementById('add-to-cart-btn');
+
+            if (addToCartBtn && !addToCartBtn.classList.contains('disabled')) {
+                addToCartBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    if (hasColors && selectedColorId === null) {
+                        Swal.fire({ icon: 'warning', title: 'Please select a color' });
+                        return;
+                    }
+
+                    if (hasSizes && selectedSizeId === null) {
+                        Swal.fire({ icon: 'warning', title: 'Please select a size' });
+                        return;
+                    }
+
+                    var variant = findVariant();
+
+                    if (hasVariants && !variant) {
+                        Swal.fire({ icon: 'warning', title: 'Selected combination is not available' });
+                        return;
+                    }
+
+                    var qty = parseInt(document.getElementById('qty').value, 10) || 1;
+
+                    $.ajax({
+                        url: '{{ route('cart.add') }}',
+                        method: 'POST',
+                        data: {
+                            product_id: {{ $product->id }},
+                            product_attribute_id: variant ? variant.id : null,
+                            qty: qty
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                $('.cart-count').text(res.data.cart_count);
+                                Swal.fire({ icon: 'success', title: res.message, timer: 1500, showConfirmButton: false });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                            }
+                        },
+                        error: function (xhr) {
+                            var msg = xhr.responseJSON && xhr.responseJSON.message
+                                ? xhr.responseJSON.message
+                                : 'Failed to add product to cart';
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                        }
+                    });
                 });
             }
         });

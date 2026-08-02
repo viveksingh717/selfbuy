@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\TaxController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
@@ -19,6 +21,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/product/{slug}', [ShopController::class, 'productDetails'])->name('product.details');
 Route::get('/search', [ShopController::class, 'search'])->name('search');
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add');
+Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('cart.remove');
+Route::post('/cart/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+Route::delete('/cart/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
+Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('cart.shipping');
+
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 Route::get('/test', function () {
     return view('emails.templates.order_email');

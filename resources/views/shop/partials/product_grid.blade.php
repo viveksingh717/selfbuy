@@ -20,7 +20,12 @@
                         </div>
 
                         <div class="product-action">
-                            <a href="#" class="btn-product btn-cart"><span>add to cart</span></a>
+                            <a href="{{ $product->attributes_count > 0 ? route('product.details', $product->product_slug) : '#' }}"
+                                class="btn-product btn-cart grid-add-to-cart {{ $product->stock_status !== 'in_stock' ? 'disabled' : '' }}"
+                                data-product-id="{{ $product->id }}"
+                                data-has-variant="{{ $product->attributes_count > 0 ? 1 : 0 }}">
+                                <span>{{ $product->attributes_count > 0 ? 'select options' : 'add to cart' }}</span>
+                            </a>
                         </div>
                     </figure>
 
@@ -51,6 +56,43 @@
         @endforelse
     </div><!-- End .row -->
 </div><!-- End .products -->
+
+@push('scripts')
+    <script>
+        $(document).on('click', '.grid-add-to-cart', function (e) {
+            var $btn = $(this);
+
+            if ($btn.hasClass('disabled') || $btn.data('has-variant') == 1) {
+                return;
+            }
+
+            e.preventDefault();
+
+            $.ajax({
+                url: '{{ route('cart.add') }}',
+                method: 'POST',
+                data: {
+                    product_id: $btn.data('product-id'),
+                    qty: 1
+                },
+                success: function (res) {
+                    if (res.success) {
+                        $('.cart-count').text(res.data.cart_count);
+                        Swal.fire({ icon: 'success', title: res.message, timer: 1500, showConfirmButton: false });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                    }
+                },
+                error: function (xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.message
+                        ? xhr.responseJSON.message
+                        : 'Failed to add product to cart';
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                }
+            });
+        });
+    </script>
+@endpush
 
 @if ($products->hasPages())
     <nav aria-label="Page navigation">
