@@ -52,17 +52,11 @@
                                 </form>
                                 <div class="form-choice">
                                     <p class="text-center">or sign in with</p>
-                                    <div class="row">
+                                    <div class="row justify-content-center">
                                         <div class="col-sm-6">
                                             <a href="#" class="btn btn-login btn-g">
                                                 <i class="icon-google"></i>
                                                 Login With Google
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login btn-f">
-                                                <i class="icon-facebook-f"></i>
-                                                Login With Facebook
                                             </a>
                                         </div><!-- End .col-6 -->
                                     </div><!-- End .row -->
@@ -70,6 +64,12 @@
                             </div><!-- .End .tab-pane -->
                             <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
                                 <form action="#">
+                                    <div class="form-group">
+                                        <label for="register-email">Your Name *</label>
+                                        <input type="text" class="form-control" id="register-name"
+                                            name="register-name" required>
+                                    </div>
+
                                     <div class="form-group">
                                         <label for="register-email">Your email address *</label>
                                         <input type="email" class="form-control" id="register-email"
@@ -81,6 +81,12 @@
                                         <input type="password" class="form-control" id="register-password"
                                             name="register-password" required>
                                     </div><!-- End .form-group -->
+
+                                    <div class="form-group">
+                                        <label for="register-mobile">Mobile No. *</label>
+                                        <input type="text" class="form-control" id="register-mobile"
+                                            name="register-mobile" required>
+                                    </div>
 
                                     <div class="form-footer">
                                         <button type="submit" class="btn btn-outline-primary-2">
@@ -98,17 +104,11 @@
                                 </form>
                                 <div class="form-choice">
                                     <p class="text-center">or sign in with</p>
-                                    <div class="row">
+                                    <div class="row justify-content-center">
                                         <div class="col-sm-6">
                                             <a href="#" class="btn btn-login btn-g">
                                                 <i class="icon-google"></i>
                                                 Login With Google
-                                            </a>
-                                        </div><!-- End .col-6 -->
-                                        <div class="col-sm-6">
-                                            <a href="#" class="btn btn-login  btn-f">
-                                                <i class="icon-facebook-f"></i>
-                                                Login With Facebook
                                             </a>
                                         </div><!-- End .col-6 -->
                                     </div><!-- End .row -->
