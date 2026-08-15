@@ -45,9 +45,14 @@ class CartController extends Controller
         );
 
         if ($request->ajax()) {
-            return $result['status']
-                ? $rs->setSuccessResponse($result['message'], ['cart_count' => $result['cart_count']])
-                : $rs->setErrorResponse($result['message']);
+            if (!$result['status']) {
+                return $rs->setErrorResponse($result['message']);
+            }
+
+            return $rs->setSuccessResponse($result['message'], [
+                'cart_count' => $result['cart_count'],
+                'cart_dropdown_html' => $this->renderCartDropdown(),
+            ]);
         }
 
         return back()->with($result['status'] ? 'success' : 'error', $result['message']);
@@ -144,5 +149,15 @@ class CartController extends Controller
     private function totalsPayload(array $result): array
     {
         return collect($result)->except(['status', 'message', 'data'])->toArray();
+    }
+
+    private function renderCartDropdown(): string
+    {
+        $cartItems = $this->cartService->getCartItems();
+
+        return view('layouts.inc.cart_dropdown', [
+            'headerCartItems' => $cartItems->take(5),
+            'headerCartTotal' => (float) $cartItems->sum(fn ($item) => $item->line_total),
+        ])->render();
     }
 }

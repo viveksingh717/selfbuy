@@ -108,8 +108,6 @@
                                             </tr><!-- End .summary-total -->
                                         </tbody>
                                     </table><!-- End .table table-summary -->
-                                    <p class="text-muted small">Coupons and shipping options are available on the checkout page.</p>
-
                                     <a href="{{ route('checkout.index') }}" class="btn btn-outline-primary-2 btn-order btn-block">PROCEED TO CHECKOUT</a>
                                 </div><!-- End .summary -->
 

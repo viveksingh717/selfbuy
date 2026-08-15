@@ -1,5 +1,5 @@
 <div class="products mb-3">
-    <div class="row justify-content-center">
+    <div class="row">
         @forelse ($products as $product)
             <div class="col-6 col-md-4 col-lg-4">
                 <div class="product product-7 text-center">
@@ -78,6 +78,7 @@
                 success: function (res) {
                     if (res.success) {
                         $('.cart-count').text(res.data.cart_count);
+                        $('#cart-dropdown-content').html(res.data.cart_dropdown_html);
                         Swal.fire({ icon: 'success', title: res.message, timer: 1500, showConfirmButton: false });
                     } else {
                         Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
