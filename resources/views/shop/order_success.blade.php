@@ -96,7 +96,7 @@
                                         </tr>
                                         <tr>
                                             <td>Payment Method:</td>
-                                            <td>Cash on Delivery</td>
+                                            <td>{{ $order->paymentMethodLabel() }}</td>
                                         </tr>
                                     </tbody>
                                 </table>

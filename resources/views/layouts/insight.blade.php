@@ -46,6 +46,8 @@
         }
         .password-toggle-icon.is-active { color: #c96; }
     </style>
+
+    @yield('style')
 </head>
 
 <body>

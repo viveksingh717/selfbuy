@@ -53,4 +53,15 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class, 'order_id');
     }
+
+    public function paymentMethodLabel(): string
+    {
+        // Deliberately doesn't name the specific gateway (Razorpay, Stripe, PayPal,
+        // UPI, ...) to the customer — they don't need to know which processor was
+        // used, just how they paid. Keeps this label stable as more gateways are added.
+        return match ($this->payment_method) {
+            'cod' => 'Cash on Delivery',
+            default => 'Online Payment',
+        };
+    }
 }

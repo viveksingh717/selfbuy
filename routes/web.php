@@ -19,6 +19,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Payments\RazorpayController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,16 @@ Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('car
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+// Payment routes are accessible to guests and logged-in users alike (unlike
+// login/register/otp below), so they sit outside the 'guest' middleware group.
+Route::get('/payment/razorpay/{payment}', [RazorpayController::class, 'show'])->name('payment.razorpay.show');
+Route::post('/payment/razorpay/verify', [RazorpayController::class, 'verify'])->name('payment.razorpay.verify');
+Route::post('/payment/razorpay/failed', [RazorpayController::class, 'failed'])->name('payment.razorpay.failed');
+
+// Server-to-server only — trusted via signature, not session/CSRF (see bootstrap/app.php
+// for the matching CSRF exemption; Razorpay's servers can't supply a CSRF token).
+Route::post('/webhooks/razorpay', [RazorpayController::class, 'webhook'])->name('webhooks.razorpay');
 
 Route::middleware('guest')->group(function () {
     // Login/register happen via the modal on every page; these bare URLs just
@@ -62,7 +73,13 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
 
 Route::get('/test', function () {
-    return view('emails.templates.order_email');
+    $order = \App\Models\Order::with('items')->latest()->first();
+
+    if (!$order) {
+        return 'No orders exist yet to preview this template with.';
+    }
+
+    return view('emails.templates.order_email', compact('order'));
 });
 
 Route::post('/generate_slug', [CommonController::class, 'generate_slug'])->name('generate_slug');

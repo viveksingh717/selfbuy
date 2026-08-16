@@ -48,7 +48,14 @@ return [
     'msg91' => [
         'auth_key' => env('MSG91_AUTH_KEY'),
         'template_id' => env('MSG91_OTP_TEMPLATE_ID'),
+        'transactional_template_id' => env('MSG91_TRANSACTIONAL_TEMPLATE_ID'),
         'sender_id' => env('MSG91_SENDER_ID'),
+    ],
+
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
 ];

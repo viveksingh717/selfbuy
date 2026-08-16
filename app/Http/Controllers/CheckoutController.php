@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Services\AuthService;
+use App\Models\Order;
 use App\Services\CartService;
+use App\Services\CheckoutAccountService;
 use App\Services\OrderService;
-use App\Services\OtpService;
+use App\Services\Payments\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
@@ -17,8 +17,8 @@ class CheckoutController extends Controller
     public function __construct(
         private CartService $cartService,
         private OrderService $orderService,
-        private AuthService $authService,
-        private OtpService $otpService,
+        private PaymentService $paymentService,
+        private CheckoutAccountService $checkoutAccountService,
     ) {
     }
 
@@ -34,7 +34,12 @@ class CheckoutController extends Controller
         $appliedCoupon = $this->cartService->getAppliedCoupon();
         $user = Auth::guard('web')->user();
 
-        return view('shop.checkout', compact('cartItems', 'totals', 'appliedCoupon', 'user'));
+        // The user profile only has name/email/phone — no address fields at all —
+        // so the full shipping address (city, state, postal code, country) can only
+        // come from a previous order, not the account itself.
+        $lastOrder = $user ? Order::where('user_id', $user->id)->latest()->first() : null;
+
+        return view('shop.checkout', compact('cartItems', 'totals', 'appliedCoupon', 'user', 'lastOrder'));
     }
 
     public function store(Request $request)
@@ -53,6 +58,7 @@ class CheckoutController extends Controller
             'postal_code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9\- ]{3,20}$/'],
             'country' => 'required|string|max:100',
             'order_notes' => 'nullable|string|max:1000',
+            'payment_method' => 'required|string|in:cod,razorpay',
             'create_account' => 'nullable|boolean',
             'account_password' => array_filter([
                 'nullable',
@@ -68,9 +74,20 @@ class CheckoutController extends Controller
 
         $data = $validator->validated();
         $wantsAccount = $isGuest && $request->boolean('create_account');
-        $orderData = collect($data)->except(['create_account', 'account_password'])->toArray();
 
-        $result = $this->orderService->placeOrder($orderData);
+        $billingData = collect($data)->except(['create_account', 'account_password', 'payment_method'])->toArray();
+
+        if ($wantsAccount) {
+            // Encrypted, never plaintext — this may sit in the payments table for
+            // minutes if the customer takes a while on a gateway's checkout page.
+            $billingData['account_password_encrypted'] = Crypt::encryptString($data['account_password']);
+        }
+
+        if ($data['payment_method'] === 'razorpay') {
+            return $this->startGatewayPayment('razorpay', $billingData, $request);
+        }
+
+        $result = $this->orderService->placeOrder($billingData, 'cod', 'pending');
 
         if (!$result['status']) {
             return back()->with('error', $result['message'])->withInput($request->except('account_password'));
@@ -78,9 +95,7 @@ class CheckoutController extends Controller
 
         $order = $result['data'];
 
-        if ($wantsAccount) {
-            $this->createAccountForGuest($order, $data);
-        }
+        $this->checkoutAccountService->maybeCreateAccount($order, $billingData);
 
         return redirect()->route('checkout.success', $order->order_number);
     }
@@ -96,48 +111,14 @@ class CheckoutController extends Controller
         return view('shop.order_success', compact('order'));
     }
 
-    /**
-     * A guest can opt to create an account while checking out. The order already
-     * succeeded by this point, so account creation failing is never allowed to
-     * fail the order itself — it's a best-effort add-on, logged either way.
-     */
-    private function createAccountForGuest($order, array $data): void
+    private function startGatewayPayment(string $gateway, array $billingData, Request $request)
     {
-        if (User::where('email', $data['email'])->exists()) {
-            Log::info('Checkout: create-account skipped, email already registered', ['email' => $data['email']]);
+        $result = $this->paymentService->initiate($gateway, $billingData);
 
-            return;
+        if (!$result['status']) {
+            return back()->with('error', $result['message'])->withInput($request->except('account_password'));
         }
 
-        $result = $this->authService->registerCustomer([
-            'name' => trim($data['first_name'].' '.$data['last_name']),
-            'email' => $data['email'],
-            'phone_number' => $data['phone'],
-            'password' => $data['account_password'],
-        ]);
-
-        if (! $result['success']) {
-            Log::warning('Checkout: create-account failed', ['email' => $data['email'], 'message' => $result['message']]);
-
-            return;
-        }
-
-        $user = $result['data'];
-        $order->update(['user_id' => $user->id]);
-
-        $this->otpService->generate($user, 'registration');
-
-        session()->put([
-            '2fa_user_id' => $user->id,
-            '2fa_purpose' => 'registration',
-            '2fa_remember' => false,
-        ]);
-
-        // One-shot: only opens the modal on the very next page load (the order
-        // success page), unlike the 2fa_* keys above which must persist across
-        // however many attempts/resends the user needs to verify.
-        session()->flash('open_auth_modal', 'otp');
-
-        Log::info('Checkout: account created for guest, linked to order', ['user_id' => $user->id, 'order_id' => $order->id]);
+        return redirect()->route("payment.{$gateway}.show", $result['data']->id);
     }
 }

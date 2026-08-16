@@ -45,6 +45,23 @@
 
                     @php
                         $userNameParts = $user ? explode(' ', $user->name, 2) : [null, null];
+
+                        // Priority: whatever they just typed (survives a validation error) →
+                        // their last order's billing details (has the full address) → their
+                        // account profile (name/email/phone only, no address fields exist
+                        // there) → a sensible default.
+                        $prefill = [
+                            'first_name' => $lastOrder?->first_name ?? $userNameParts[0],
+                            'last_name' => $lastOrder?->last_name ?? ($userNameParts[1] ?? ''),
+                            'email' => $lastOrder?->email ?? ($user->email ?? ''),
+                            'phone' => $lastOrder?->phone ?? ($user->phone_number ?? ''),
+                            'address_line1' => $lastOrder?->address_line1 ?? ($user->address ?? ''),
+                            'address_line2' => $lastOrder?->address_line2 ?? '',
+                            'city' => $lastOrder?->city ?? '',
+                            'state' => $lastOrder?->state ?? '',
+                            'postal_code' => $lastOrder?->postal_code ?? '',
+                            'country' => $lastOrder?->country ?? 'India',
+                        ];
                     @endphp
                     <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}">
                         @csrf
@@ -54,38 +71,38 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <label>First Name *</label>
-                                        <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $userNameParts[0]) }}" required>
+                                        <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $prefill['first_name']) }}" required>
                                         @error('first_name') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
 
                                     <div class="col-sm-6">
                                         <label>Last Name *</label>
-                                        <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $userNameParts[1] ?? '') }}" required>
+                                        <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $prefill['last_name']) }}" required>
                                         @error('last_name') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
                                 </div><!-- End .row -->
 
                                 <label>Country *</label>
-                                <input type="text" name="country" class="form-control" value="{{ old('country', 'India') }}" required>
+                                <input type="text" name="country" class="form-control" value="{{ old('country', $prefill['country']) }}" required>
                                 @error('country') <div class="text-danger small">{{ $message }}</div> @enderror
 
                                 <label>Street address *</label>
                                 <input type="text" name="address_line1" class="form-control mb-2"
-                                    placeholder="House number and Street name" value="{{ old('address_line1', $user->address ?? '') }}" required>
+                                    placeholder="House number and Street name" value="{{ old('address_line1', $prefill['address_line1']) }}" required>
                                 @error('address_line1') <div class="text-danger small">{{ $message }}</div> @enderror
                                 <input type="text" name="address_line2" class="form-control"
-                                    placeholder="Apartment, suite, unit etc. (optional)" value="{{ old('address_line2') }}">
+                                    placeholder="Apartment, suite, unit etc. (optional)" value="{{ old('address_line2', $prefill['address_line2']) }}">
 
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <label>Town / City *</label>
-                                        <input type="text" name="city" class="form-control" value="{{ old('city') }}" required>
+                                        <input type="text" name="city" class="form-control" value="{{ old('city', $prefill['city']) }}" required>
                                         @error('city') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
 
                                     <div class="col-sm-6">
                                         <label>State *</label>
-                                        <input type="text" name="state" class="form-control" value="{{ old('state') }}" required>
+                                        <input type="text" name="state" class="form-control" value="{{ old('state', $prefill['state']) }}" required>
                                         @error('state') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
                                 </div><!-- End .row -->
@@ -93,19 +110,19 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <label>Postcode / ZIP *</label>
-                                        <input type="text" name="postal_code" class="form-control" value="{{ old('postal_code') }}" required>
+                                        <input type="text" name="postal_code" class="form-control" value="{{ old('postal_code', $prefill['postal_code']) }}" required>
                                         @error('postal_code') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
 
                                     <div class="col-sm-6">
                                         <label>Phone *</label>
-                                        <input type="tel" name="phone" class="form-control" value="{{ old('phone', $user->phone_number ?? '') }}" required>
+                                        <input type="tel" name="phone" class="form-control" value="{{ old('phone', $prefill['phone']) }}" required>
                                         @error('phone') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
                                 </div><!-- End .row -->
 
                                 <label>Email address *</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email', $user->email ?? '') }}" required>
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $prefill['email']) }}" required>
                                 @error('email') <div class="text-danger small">{{ $message }}</div> @enderror
 
                                 <label>Order notes (optional)</label>
@@ -216,15 +233,21 @@
 
                                     <div class="checkout-payment-method">
                                         <div class="custom-control custom-radio mb-2">
-                                            <input type="radio" id="payment-cod" name="payment_method" class="custom-control-input" value="cod" checked>
+                                            <input type="radio" id="payment-cod" name="payment_method" class="custom-control-input payment-method-option" value="cod" {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
                                             <label class="custom-control-label" for="payment-cod">Cash on Delivery</label>
                                         </div>
-                                        <p class="text-muted small">Card / UPI / PayPal payment coming soon.</p>
+                                        <div class="custom-control custom-radio mb-2">
+                                            <input type="radio" id="payment-razorpay" name="payment_method" class="custom-control-input payment-method-option" value="razorpay" {{ old('payment_method') === 'razorpay' ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="payment-razorpay">Card / UPI / Netbanking (Razorpay)</label>
+                                        </div>
+                                        <img src="{{ asset('assets/images/payments-summary.png') }}" alt="Payment methods" width="272" height="20" class="mb-2">
+                                        <p class="text-muted small">Stripe and PayPal coming soon.</p>
+                                        @error('payment_method') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div>
 
                                     <button type="submit" class="btn btn-outline-primary-2 btn-order btn-block">
-                                        <span class="btn-text">Place Order</span>
-                                        <span class="btn-hover-text">Place Order</span>
+                                        <span class="btn-text" id="place-order-btn-text">Place Order</span>
+                                        <span class="btn-hover-text" id="place-order-btn-hover-text">Place Order</span>
                                     </button>
                                 </div><!-- End .summary -->
                             </aside><!-- End .col-lg-3 -->
@@ -245,6 +268,14 @@
                 $('#checkout-account-password-group').toggle(this.checked);
                 $('#checkout-account-password').prop('required', this.checked);
             });
+
+            function updatePlaceOrderButtonLabel() {
+                var label = $('.payment-method-option:checked').val() === 'razorpay' ? 'Proceed to Payment' : 'Place Order';
+                $('#place-order-btn-text, #place-order-btn-hover-text').text(label);
+            }
+
+            updatePlaceOrderButtonLabel();
+            $('.payment-method-option').on('change', updatePlaceOrderButtonLabel);
 
             $('#coupon-form').on('submit', function (e) {
                 e.preventDefault();

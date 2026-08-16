@@ -18,6 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'adminAuth'=>AdminAuthenticate::class,
             'adminGuest'=>AdminRedirectIfAuthenticated::class,
         ]);
+
+        // Payment gateway webhooks are called server-to-server and can't supply a
+        // CSRF token; they're authenticated instead via the gateway's own signed
+        // request body (verified per-gateway in the controller).
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/razorpay',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

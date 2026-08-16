@@ -35,14 +35,18 @@
 
         /* ── Header ── */
         .email-header {
-            background-color: #000000;
-            padding: 4px 6px;
+            background-color: #14161A;
+            padding: 28px 24px;
             text-align: center;
         }
 
-        /* .email-header img {
-            height: 80px;
-        } */
+        .email-header img {
+            display: block;
+            margin: 0 auto;
+            border: 0;
+            outline: none;
+            text-decoration: none;
+        }
 
         .email-header .brand-name {
             color: #FFFFFF;
@@ -126,13 +130,6 @@
             margin: 0 6px;
         }
 
-        /* .email-header img {
-            height: 70px;
-            max-height: 85px;
-            width: auto;
-            max-width: 220px;
-        } */
-
         @media only screen and (max-width: 620px) {
             .email-container {
                 width: 100% !important;
@@ -157,8 +154,13 @@
 
                         {{-- ── HEADER (same for every email) ── --}}
                         <div class="email-header">
-                            <img src="{{ asset('selfbuy.png') }}" alt="{{ config('app.name', 'SelfBuy') }}"
-                                style="height: 100px; width: auto; display: block; margin: 0 auto;">
+                            {{-- Embedded as a CID attachment, not linked by URL: a remote asset() URL
+                            resolves against APP_URL, which in local/staging environments (e.g.
+                            https://selfbuy.test) isn't a real, publicly-reachable domain — Gmail's
+                            servers have no way to fetch it, so the logo silently fails to load. --}}
+                            <img src="{{ $message->embed(public_path('assets/images/email/logo.png')) }}"
+                                alt="{{ config('app.name', 'SelfBuy') }}" width="130" height="113"
+                                style="width: 130px; height: 113px; display: block; margin: 0 auto; border: 0;">
                         </div>
 
                         {{-- ── DYNAMIC CONTENT (changes per email) ── --}}
