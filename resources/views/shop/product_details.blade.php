@@ -152,8 +152,11 @@
                                     </a>
 
                                     <div class="details-action-wrapper">
-                                        <a href="#" class="btn-product btn-wishlist" title="Wishlist"><span>Add to
-                                                Wishlist</span></a>
+                                        <a href="#" id="details-add-to-wishlist-btn"
+                                            class="btn-product btn-wishlist {{ in_array($product->id, $wishlistedProductIds ?? []) ? 'in-wishlist' : '' }}"
+                                            data-product-id="{{ $product->id }}" title="Wishlist">
+                                            <span>{{ in_array($product->id, $wishlistedProductIds ?? []) ? 'In Wishlist' : 'Add to Wishlist' }}</span>
+                                        </a>
                                     </div><!-- End .details-action-wrapper -->
                                 </div><!-- End .product-details-action -->
                             </div><!-- End .product-details -->
@@ -268,7 +271,9 @@
                                     </a>
 
                                     <div class="product-action-vertical">
-                                        <a href="#" class="btn-product-icon btn-wishlist btn-expandable"><span>add to
+                                        <a href="#"
+                                            class="btn-product-icon btn-wishlist btn-expandable grid-add-to-wishlist {{ in_array($relatedProduct->id, $wishlistedProductIds ?? []) ? 'in-wishlist' : '' }}"
+                                            data-product-id="{{ $relatedProduct->id }}"><span>add to
                                                 wishlist</span></a>
                                     </div><!-- End .product-action-vertical -->
 
@@ -464,6 +469,73 @@
                     });
                 });
             }
+
+            var wishlistBtn = document.getElementById('details-add-to-wishlist-btn');
+
+            if (wishlistBtn) {
+                wishlistBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    // Reuses the same variant resolution as "Add to Cart" above, so a
+                    // wishlisted item remembers the color/size the customer had picked
+                    // rather than always saving the bare product.
+                    var variant = findVariant();
+
+                    $.ajax({
+                        url: '{{ route('wishlist.toggle') }}',
+                        method: 'POST',
+                        data: {
+                            product_id: {{ $product->id }},
+                            product_attribute_id: variant ? variant.id : null
+                        },
+                        success: function (res) {
+                            if (!res.success) {
+                                Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                                return;
+                            }
+
+                            var added = res.data.action === 'added';
+                            $(wishlistBtn).toggleClass('in-wishlist', added);
+                            $(wishlistBtn).find('span').text(added ? 'In Wishlist' : 'Add to Wishlist');
+                            $('.wishlist-count').text(res.data.wishlist_count);
+                            Swal.fire({ icon: 'success', title: res.message, timer: 1200, showConfirmButton: false });
+                        },
+                        error: function (xhr) {
+                            var msg = xhr.responseJSON && xhr.responseJSON.message
+                                ? xhr.responseJSON.message
+                                : 'Failed to update wishlist';
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                        }
+                    });
+                });
+            }
+
+            $(document).on('click', '.grid-add-to-wishlist', function (e) {
+                e.preventDefault();
+                var $btn = $(this);
+
+                $.ajax({
+                    url: '{{ route('wishlist.toggle') }}',
+                    method: 'POST',
+                    data: { product_id: $btn.data('product-id') },
+                    success: function (res) {
+                        if (!res.success) {
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                            return;
+                        }
+
+                        $btn.toggleClass('in-wishlist', res.data.action === 'added');
+                        $('.wishlist-count').text(res.data.wishlist_count);
+                        Swal.fire({ icon: 'success', title: res.message, timer: 1200, showConfirmButton: false });
+                    },
+                    error: function (xhr) {
+                        var msg = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
+                            : 'Failed to update wishlist';
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                    }
+                });
+            });
         });
     </script>
 @endsection

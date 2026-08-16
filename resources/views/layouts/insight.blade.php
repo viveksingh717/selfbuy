@@ -45,6 +45,11 @@
             color: #999;
         }
         .password-toggle-icon.is-active { color: #c96; }
+
+        /* Filled-heart state for an already-wishlisted product — the theme ships
+           only the single default (outline, gray) .btn-wishlist glyph. */
+        .btn-wishlist.in-wishlist { color: #c96; }
+        .btn-wishlist.in-wishlist:before { content: '\f233'; }
     </style>
 
     @yield('style')
@@ -107,6 +112,7 @@
             $icon.toggleClass('is-active', isHidden);
             $icon.attr('title', isHidden ? 'Hide password' : 'Show password');
         });
+
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

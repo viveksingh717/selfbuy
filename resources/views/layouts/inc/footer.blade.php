@@ -71,7 +71,7 @@
                                 <li><a href="javascript:void(0)">{{ Auth::user()->name }}</a></li>
                             @endguest
                             <li><a href="{{ route('cart.index') }}">View Cart</a></li>
-                            <li><a href="#">My Wishlist</a></li>
+                            <li><a href="{{ route('wishlist.index') }}">My Wishlist</a></li>
                             <li><a href="#">Track My Order</a></li>
                             <li><a href="#">Help</a></li>
                         </ul><!-- End .widget-list -->

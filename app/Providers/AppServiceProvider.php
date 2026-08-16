@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\CartService;
+use App\Services\WishlistService;
 use Illuminate\Auth\Events\Attempting;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
@@ -36,9 +37,19 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
+        // Note: in the current flow, Auth::guard('web')->login() is only ever
+        // called directly from OtpController::verify() (after 2FA succeeds),
+        // never via Auth::attempt() — so Attempting/Login never actually fire
+        // for a real login, and the merge calls that matter live in
+        // OtpController::verify() itself, which captures the pre-login session
+        // id correctly. This listener is kept only in case something still
+        // authenticates via attempt() in the future.
         Event::listen(function (Login $event) use (&$preAuthSessionId) {
             if ($event->guard === 'web') {
-                app(CartService::class)->mergeGuestCartIntoUser($preAuthSessionId ?? Session::getId(), $event->user->id);
+                $sessionId = $preAuthSessionId ?? Session::getId();
+
+                app(CartService::class)->mergeGuestCartIntoUser($sessionId, $event->user->id);
+                app(WishlistService::class)->mergeGuestWishlistIntoUser($sessionId, $event->user->id);
             }
         });
 
@@ -50,7 +61,15 @@ class AppServiceProvider extends ServiceProvider
                 'headerCartItems' => $cartItems->take(5),
                 'headerCartCount' => (int) $cartItems->sum('qty'),
                 'headerCartTotal' => (float) $cartItems->sum(fn ($item) => $item->line_total),
+                'headerWishlistCount' => app(WishlistService::class)->getWishlistCount(),
             ]);
+        });
+
+        // Lets product listing/detail views show a filled heart for items already
+        // wishlisted, without every controller that renders them needing to remember
+        // to fetch and pass this down — same rationale as the header composer above.
+        View::composer(['shop.partials.product_grid', 'shop.product_details'], function ($view) {
+            $view->with('wishlistedProductIds', app(WishlistService::class)->getWishlistedProductIds());
         });
     }
 }

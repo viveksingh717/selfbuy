@@ -29,8 +29,8 @@
                         <a href="#">Links</a>
                         <ul>
                             <li><a href="tel:#"><i class="icon-phone"></i>Call: +91 900 406 9694</a></li>
-                            <li><a href="wishlist.html"><i class="icon-heart-o"></i>My Wishlist
-                                    <span>(3)</span></a></li>
+                            <li><a href="{{ route('wishlist.index') }}"><i class="icon-heart-o"></i>My Wishlist
+                                    <span>(<span class="wishlist-count">{{ $headerWishlistCount ?? 0 }}</span>)</span></a></li>
                             <li><a href="about.html">About Us</a></li>
                             <li><a href="contact.html">Contact Us</a></li>
                             @guest

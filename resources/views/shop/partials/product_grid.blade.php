@@ -14,7 +14,8 @@
 
                         <div class="product-action-vertical">
                             <a href="#"
-                                class="btn-product-icon btn-wishlist btn-expandable"><span>add
+                                class="btn-product-icon btn-wishlist btn-expandable grid-add-to-wishlist {{ in_array($product->id, $wishlistedProductIds ?? []) ? 'in-wishlist' : '' }}"
+                                data-product-id="{{ $product->id }}"><span>add
                                     to
                                     wishlist</span></a>
                         </div>
@@ -88,6 +89,33 @@
                     var msg = xhr.responseJSON && xhr.responseJSON.message
                         ? xhr.responseJSON.message
                         : 'Failed to add product to cart';
+                    Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                }
+            });
+        });
+
+        $(document).on('click', '.grid-add-to-wishlist', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+
+            $.ajax({
+                url: '{{ route('wishlist.toggle') }}',
+                method: 'POST',
+                data: { product_id: $btn.data('product-id') },
+                success: function (res) {
+                    if (!res.success) {
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                        return;
+                    }
+
+                    $btn.toggleClass('in-wishlist', res.data.action === 'added');
+                    $('.wishlist-count').text(res.data.wishlist_count);
+                    Swal.fire({ icon: 'success', title: res.message, timer: 1200, showConfirmButton: false });
+                },
+                error: function (xhr) {
+                    var msg = xhr.responseJSON && xhr.responseJSON.message
+                        ? xhr.responseJSON.message
+                        : 'Failed to update wishlist';
                     Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
                 }
             });
