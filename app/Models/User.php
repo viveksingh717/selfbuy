@@ -3,9 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\PasswordResetMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class User extends Authenticatable
 {
@@ -21,7 +24,12 @@ class User extends Authenticatable
         'email',
         'password',
         'remember_token',
-        'terms'
+        'phone_number',
+        'address',
+        'status',
+        'role_type',
+        'is_verified',
+        'terms',
     ];
 
     /**
@@ -45,5 +53,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $url = route('password.reset', ['token' => $token, 'email' => $this->email]);
+
+        try {
+            Mail::to($this->email)->send(new PasswordResetMail($url, $this->name));
+            Log::info('Password reset: email dispatched', ['user_id' => $this->id, 'to' => $this->email]);
+        } catch (\Throwable $e) {
+            Log::error('Password reset: email send failed: '.$e->getMessage(), ['user_id' => $this->id, 'to' => $this->email]);
+        }
     }
 }

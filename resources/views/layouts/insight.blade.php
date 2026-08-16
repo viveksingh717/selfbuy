@@ -33,6 +33,19 @@
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/magnific-popup/magnific-popup.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/nouislider/nouislider.css') }}">
 
+    <style>
+        .password-field-wrapper { position: relative; }
+        .password-field-wrapper .form-control { padding-right: 40px; }
+        .password-toggle-icon {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+        }
+        .password-toggle-icon.is-active { color: #c96; }
+    </style>
 </head>
 
 <body>
@@ -81,6 +94,16 @@
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
+        });
+
+        $(document).on('click', '.password-toggle-icon', function () {
+            var $icon = $(this);
+            var $input = $($icon.data('target'));
+            var isHidden = $input.attr('type') === 'password';
+
+            $input.attr('type', isHidden ? 'text' : 'password');
+            $icon.toggleClass('is-active', isHidden);
+            $icon.attr('title', isHidden ? 'Hide password' : 'Show password');
         });
     </script>
 

@@ -33,8 +33,18 @@
                                     <span>(3)</span></a></li>
                             <li><a href="about.html">About Us</a></li>
                             <li><a href="contact.html">Contact Us</a></li>
-                            <li><a href="#signin-modal" data-toggle="modal"><i class="icon-user"></i>Login</a>
-                            </li>
+                            @guest
+                                <li><a href="#signin-modal" data-toggle="modal"><i class="icon-user"></i>Login</a></li>
+                                <li><a href="#signin-modal" data-toggle="modal" data-auth-tab="register-tab"><i class="icon-user"></i>Register</a></li>
+                            @else
+                                <li><a href="javascript:void(0)"><i class="icon-user"></i>{{ Auth::user()->name }}</a></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" style="background:none;border:0;padding:0;font:inherit;color:inherit;"><i class="icon-unlock"></i>Logout</button>
+                                    </form>
+                                </li>
+                            @endguest
                         </ul>
                     </li>
                 </ul><!-- End .top-menu -->

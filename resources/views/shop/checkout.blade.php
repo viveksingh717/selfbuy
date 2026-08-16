@@ -43,6 +43,9 @@
                         </div><!-- End .checkout-discount -->
                     @endif
 
+                    @php
+                        $userNameParts = $user ? explode(' ', $user->name, 2) : [null, null];
+                    @endphp
                     <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}">
                         @csrf
                         <div class="row">
@@ -51,13 +54,13 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <label>First Name *</label>
-                                        <input type="text" name="first_name" class="form-control" value="{{ old('first_name') }}" required>
+                                        <input type="text" name="first_name" class="form-control" value="{{ old('first_name', $userNameParts[0]) }}" required>
                                         @error('first_name') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
 
                                     <div class="col-sm-6">
                                         <label>Last Name *</label>
-                                        <input type="text" name="last_name" class="form-control" value="{{ old('last_name') }}" required>
+                                        <input type="text" name="last_name" class="form-control" value="{{ old('last_name', $userNameParts[1] ?? '') }}" required>
                                         @error('last_name') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
                                 </div><!-- End .row -->
@@ -68,7 +71,7 @@
 
                                 <label>Street address *</label>
                                 <input type="text" name="address_line1" class="form-control mb-2"
-                                    placeholder="House number and Street name" value="{{ old('address_line1') }}" required>
+                                    placeholder="House number and Street name" value="{{ old('address_line1', $user->address ?? '') }}" required>
                                 @error('address_line1') <div class="text-danger small">{{ $message }}</div> @enderror
                                 <input type="text" name="address_line2" class="form-control"
                                     placeholder="Apartment, suite, unit etc. (optional)" value="{{ old('address_line2') }}">
@@ -96,18 +99,45 @@
 
                                     <div class="col-sm-6">
                                         <label>Phone *</label>
-                                        <input type="tel" name="phone" class="form-control" value="{{ old('phone') }}" required>
+                                        <input type="tel" name="phone" class="form-control" value="{{ old('phone', $user->phone_number ?? '') }}" required>
                                         @error('phone') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div><!-- End .col-sm-6 -->
                                 </div><!-- End .row -->
 
                                 <label>Email address *</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $user->email ?? '') }}" required>
                                 @error('email') <div class="text-danger small">{{ $message }}</div> @enderror
 
                                 <label>Order notes (optional)</label>
                                 <textarea name="order_notes" class="form-control" cols="30" rows="4"
                                     placeholder="Notes about your order, e.g. special notes for delivery">{{ old('order_notes') }}</textarea>
+
+                                @guest
+                                    @php
+                                        // Opt-out rather than opt-in: checked by default on a fresh visit.
+                                        // If the form was already submitted once (a validation error sent us
+                                        // back here), respect whatever the user actually chose instead.
+                                        $createAccountChecked = session()->hasOldInput() ? old('create_account', false) : true;
+                                    @endphp
+                                    <div class="p-3 mt-3" style="background:#FAF8F4; border-radius:8px;">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="checkout-create-account"
+                                                name="create_account" value="1" {{ $createAccountChecked ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="checkout-create-account"><strong>Create an account</strong> — track this order, save your details, and check out faster next time</label>
+                                        </div><!-- End .custom-checkbox -->
+
+                                        <div class="form-group mt-2 mb-0" id="checkout-account-password-group"
+                                            style="{{ $createAccountChecked ? '' : 'display:none;' }}">
+                                            <label for="checkout-account-password">Password *</label>
+                                            <div class="password-field-wrapper">
+                                                <input type="password" class="form-control" id="checkout-account-password"
+                                                    name="account_password" minlength="6">
+                                                <i class="icon-eye password-toggle-icon" data-target="#checkout-account-password" title="Show password"></i>
+                                            </div>
+                                            @error('account_password') <div class="text-danger small">{{ $message }}</div> @enderror
+                                        </div><!-- End .form-group -->
+                                    </div>
+                                @endguest
                             </div><!-- End .col-lg-9 -->
                             <aside class="col-lg-3">
                                 <div class="summary">
@@ -194,6 +224,7 @@
 
                                     <button type="submit" class="btn btn-outline-primary-2 btn-order btn-block">
                                         <span class="btn-text">Place Order</span>
+                                        <span class="btn-hover-text">Place Order</span>
                                     </button>
                                 </div><!-- End .summary -->
                             </aside><!-- End .col-lg-3 -->
@@ -208,6 +239,13 @@
 @section('script')
     <script>
         $(function () {
+            $('#checkout-account-password').prop('required', $('#checkout-create-account').is(':checked'));
+
+            $('#checkout-create-account').on('change', function () {
+                $('#checkout-account-password-group').toggle(this.checked);
+                $('#checkout-account-password').prop('required', this.checked);
+            });
+
             $('#coupon-form').on('submit', function (e) {
                 e.preventDefault();
                 var code = $('#checkout-discount-input').val();

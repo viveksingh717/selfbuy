@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Services\CartService;
+use Illuminate\Auth\Events\Attempting;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,9 +25,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(function (Login $event) {
+        // The session ID is regenerated as part of the login process, so the guest
+        // session ID must be captured on Attempting (fired before login) rather
+        // than read again inside the Login listener (fired after regeneration).
+        $preAuthSessionId = null;
+
+        Event::listen(function (Attempting $event) use (&$preAuthSessionId) {
             if ($event->guard === 'web') {
-                app(CartService::class)->mergeGuestCartIntoUser(session()->getId(), $event->user->id);
+                $preAuthSessionId = Session::getId();
+            }
+        });
+
+        Event::listen(function (Login $event) use (&$preAuthSessionId) {
+            if ($event->guard === 'web') {
+                app(CartService::class)->mergeGuestCartIntoUser($preAuthSessionId ?? Session::getId(), $event->user->id);
             }
         });
 

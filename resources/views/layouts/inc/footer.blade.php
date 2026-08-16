@@ -31,7 +31,16 @@
                             <li><a href="#">How to shop on SelfBuy</a></li>
                             <li><a href="#">FAQ</a></li>
                             <li><a href="contact.html">Contact us</a></li>
-                            <li><a href="login.html">Log in</a></li>
+                            @guest
+                                <li><a href="#signin-modal" data-toggle="modal">Log in</a></li>
+                            @else
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" style="background:none;border:0;padding:0;font:inherit;color:inherit;">Log out</button>
+                                    </form>
+                                </li>
+                            @endguest
                         </ul><!-- End .widget-list -->
                     </div><!-- End .widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
@@ -56,8 +65,12 @@
                         <h4 class="widget-title">My Account</h4><!-- End .widget-title -->
 
                         <ul class="widget-list">
-                            <li><a href="#">Sign In</a></li>
-                            <li><a href="cart.html">View Cart</a></li>
+                            @guest
+                                <li><a href="#signin-modal" data-toggle="modal">Sign In</a></li>
+                            @else
+                                <li><a href="javascript:void(0)">{{ Auth::user()->name }}</a></li>
+                            @endguest
+                            <li><a href="{{ route('cart.index') }}">View Cart</a></li>
                             <li><a href="#">My Wishlist</a></li>
                             <li><a href="#">Track My Order</a></li>
                             <li><a href="#">Help</a></li>

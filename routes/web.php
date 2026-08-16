@@ -10,6 +10,11 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\TaxController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
@@ -33,6 +38,28 @@ Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('car
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+Route::middleware('guest')->group(function () {
+    // Login/register happen via the modal on every page; these bare URLs just
+    // land on the homepage with the modal pre-opened (deep links, redirects).
+    Route::get('/login', fn () => redirect()->route('home')->with('open_auth_modal', 'signin'))->name('login');
+    Route::get('/register', fn () => redirect()->route('home')->with('open_auth_modal', 'register'))->name('register');
+
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+
+    Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+
+    Route::post('/otp/verify', [OtpController::class, 'verify'])->name('otp.verify');
+    Route::post('/otp/resend', [OtpController::class, 'resend'])->name('otp.resend');
+
+    Route::post('/password/email', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+});
+
+Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
 
 Route::get('/test', function () {
     return view('emails.templates.order_email');
