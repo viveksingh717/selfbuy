@@ -27,7 +27,7 @@ class PaymentFailedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.payment_failed',
+            view: 'emails.templates.payment_failed',
             with: [
                 'payment' => $this->payment,
                 'billing' => $this->payment->billing_data ?? [],
