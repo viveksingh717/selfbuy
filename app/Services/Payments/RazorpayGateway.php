@@ -3,6 +3,7 @@
 namespace App\Services\Payments;
 
 use App\Services\Payments\Contracts\PaymentGatewayInterface;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Razorpay\Api\Api;
 use Razorpay\Api\Errors\SignatureVerificationError;
@@ -22,6 +23,11 @@ class RazorpayGateway implements PaymentGatewayInterface
     public function name(): string
     {
         return 'razorpay';
+    }
+
+    public function currency(): string
+    {
+        return 'INR';
     }
 
     public function createOrder(float $amount, string $currency, array $meta = []): array
@@ -57,7 +63,7 @@ class RazorpayGateway implements PaymentGatewayInterface
         }
     }
 
-    public function verifyWebhookSignature(string $rawBody, string $signatureHeader): bool
+    public function verifyWebhookSignature(Request $request): bool
     {
         $secret = config('services.razorpay.webhook_secret');
 
@@ -67,8 +73,14 @@ class RazorpayGateway implements PaymentGatewayInterface
             return false;
         }
 
+        $signatureHeader = $request->header('X-Razorpay-Signature', '');
+
+        if (!$signatureHeader) {
+            return false;
+        }
+
         try {
-            $this->api->utility->verifyWebhookSignature($rawBody, $signatureHeader, $secret);
+            $this->api->utility->verifyWebhookSignature($request->getContent(), $signatureHeader, $secret);
 
             return true;
         } catch (SignatureVerificationError $e) {

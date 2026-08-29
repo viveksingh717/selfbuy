@@ -4,14 +4,19 @@ namespace App\Services\Payments;
 
 use App\Models\Payment;
 use App\Services\CartService;
+use App\Services\ExchangeRateService;
 use App\Services\OrderNotificationService;
 use App\Services\OrderService;
 use App\Services\Payments\Contracts\PaymentGatewayInterface;
+use App\Services\Payments\InstamojoGateway;
+use App\Services\Payments\PayPalGateway;
 use App\Services\Payments\RazorpayGateway;
+use App\Services\Payments\StripeGateway;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use InvalidArgumentException;
 use Throwable;
@@ -22,6 +27,7 @@ class PaymentService
         private CartService $cartService,
         private OrderService $orderService,
         private OrderNotificationService $orderNotificationService,
+        private ExchangeRateService $exchangeRateService,
     ) {
     }
 
@@ -29,6 +35,9 @@ class PaymentService
     {
         return match ($name) {
             'razorpay' => app(RazorpayGateway::class),
+            'stripe' => app(StripeGateway::class),
+            'paypal' => app(PayPalGateway::class),
+            'instamojo' => app(InstamojoGateway::class),
             default => throw new InvalidArgumentException("Unsupported payment gateway: {$name}"),
         };
     }
@@ -48,15 +57,27 @@ class PaymentService
         }
 
         $items = $cartItems->map(fn ($item) => $this->orderService->normalizeCartItem($item))->all();
+        // Always INR, regardless of gateway — this is what actually creates the
+        // Order once payment completes (see completePayment() below), and the
+        // store's orders/products are INR-denominated storewide.
         $totals = $this->cartService->getTotals();
         $gateway = $this->gateway($gatewayName);
+        $currency = $gateway->currency();
+
+        // What the gateway is actually told to charge. Converted only if the
+        // gateway can't take INR directly (currently just PayPal — see
+        // PaymentGatewayInterface::currency()); order_snapshot above is
+        // unaffected, so the resulting Order is still priced in INR either way.
+        $chargeAmount = $currency === 'INR'
+            ? $totals['cart_total']
+            : $this->exchangeRateService->convertInrToUsd($totals['cart_total']);
 
         $payment = Payment::create([
             'user_id' => Auth::guard('web')->id(),
             'session_id' => Session::getId(),
             'gateway' => $gatewayName,
-            'amount' => $totals['cart_total'],
-            'currency' => 'INR',
+            'amount' => $chargeAmount,
+            'currency' => $currency,
             'status' => 'created',
             'billing_data' => $billingData,
             // The request that later completes this payment (a webhook, in
@@ -66,9 +87,26 @@ class PaymentService
         ]);
 
         try {
-            $result = $gateway->createOrder($totals['cart_total'], 'INR', [
+            // Only redirect-based gateways (Stripe Checkout, PayPal, ...) read these —
+            // Razorpay's in-page widget ignores them. Routes are optional per gateway
+            // so this stays generic instead of hardcoding gateway names here.
+            $result = $gateway->createOrder($chargeAmount, $currency, [
                 'receipt' => 'payment_'.$payment->id,
                 'notes' => ['payment_id' => $payment->id],
+                'success_url' => Route::has("payment.{$gatewayName}.callback")
+                    ? route("payment.{$gatewayName}.callback", $payment->id)
+                    : null,
+                'cancel_url' => Route::has("payment.{$gatewayName}.cancel")
+                    ? route("payment.{$gatewayName}.cancel", $payment->id)
+                    : route('checkout.index'),
+                'webhook_url' => Route::has("webhooks.{$gatewayName}")
+                    ? route("webhooks.{$gatewayName}")
+                    : null,
+                // Only Instamojo needs these today, but any gateway can read
+                // them the same way success_url/cancel_url already work.
+                'buyer_name' => trim(($billingData['first_name'] ?? '').' '.($billingData['last_name'] ?? '')) ?: null,
+                'buyer_email' => $billingData['email'] ?? null,
+                'buyer_phone' => $billingData['phone'] ?? null,
             ]);
         } catch (Throwable $e) {
             Log::error("Payment ({$gatewayName}): order creation failed: ".$e->getMessage(), ['payment_id' => $payment->id]);
@@ -82,7 +120,7 @@ class PaymentService
             'meta' => $result['raw'],
         ]);
 
-        Log::info("Payment ({$gatewayName}): order created", ['payment_id' => $payment->id, 'gateway_order_id' => $result['gateway_order_id'], 'amount' => $totals['cart_total']]);
+        Log::info("Payment ({$gatewayName}): order created", ['payment_id' => $payment->id, 'gateway_order_id' => $result['gateway_order_id'], 'amount' => $chargeAmount, 'currency' => $currency]);
 
         return ['status' => true, 'data' => $payment];
     }

@@ -58,7 +58,7 @@ class CheckoutController extends Controller
             'postal_code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9\- ]{3,20}$/'],
             'country' => 'required|string|max:100',
             'order_notes' => 'nullable|string|max:1000',
-            'payment_method' => 'required|string|in:cod,razorpay',
+            'payment_method' => 'required|string|in:cod,razorpay,stripe,paypal,instamojo',
             'create_account' => 'nullable|boolean',
             'account_password' => array_filter([
                 'nullable',
@@ -83,8 +83,8 @@ class CheckoutController extends Controller
             $billingData['account_password_encrypted'] = Crypt::encryptString($data['account_password']);
         }
 
-        if ($data['payment_method'] === 'razorpay') {
-            return $this->startGatewayPayment('razorpay', $billingData, $request);
+        if (in_array($data['payment_method'], ['razorpay', 'stripe', 'paypal', 'instamojo'], true)) {
+            return $this->startGatewayPayment($data['payment_method'], $billingData, $request);
         }
 
         $result = $this->orderService->placeOrder($billingData, 'cod', 'pending');

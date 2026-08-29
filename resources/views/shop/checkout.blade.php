@@ -240,8 +240,20 @@
                                             <input type="radio" id="payment-razorpay" name="payment_method" class="custom-control-input payment-method-option" value="razorpay" {{ old('payment_method') === 'razorpay' ? 'checked' : '' }}>
                                             <label class="custom-control-label" for="payment-razorpay">Card / UPI / Netbanking (Razorpay)</label>
                                         </div>
+                                        <div class="custom-control custom-radio mb-2">
+                                            <input type="radio" id="payment-stripe" name="payment_method" class="custom-control-input payment-method-option" value="stripe" {{ old('payment_method') === 'stripe' ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="payment-stripe">Card (Stripe)</label>
+                                        </div>
+                                        <div class="custom-control custom-radio mb-2">
+                                            <input type="radio" id="payment-paypal" name="payment_method" class="custom-control-input payment-method-option" value="paypal" {{ old('payment_method') === 'paypal' ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="payment-paypal">PayPal</label>
+                                        </div>
+                                        <p class="text-muted small paypal-usd-note" style="display: none;">You'll be charged in USD via PayPal, converted from the order total at the current exchange rate.</p>
+                                        <div class="custom-control custom-radio mb-2">
+                                            <input type="radio" id="payment-instamojo" name="payment_method" class="custom-control-input payment-method-option" value="instamojo" {{ old('payment_method') === 'instamojo' ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="payment-instamojo">Card / UPI / Netbanking (Instamojo)</label>
+                                        </div>
                                         <img src="{{ asset('assets/images/payments-summary.png') }}" alt="Payment methods" width="272" height="20" class="mb-2">
-                                        <p class="text-muted small">Stripe and PayPal coming soon.</p>
                                         @error('payment_method') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div>
 
@@ -270,8 +282,11 @@
             });
 
             function updatePlaceOrderButtonLabel() {
-                var label = $('.payment-method-option:checked').val() === 'razorpay' ? 'Proceed to Payment' : 'Place Order';
+                var selected = $('.payment-method-option:checked').val();
+                var isGateway = ['razorpay', 'stripe', 'paypal', 'instamojo'].indexOf(selected) !== -1;
+                var label = isGateway ? 'Proceed to Payment' : 'Place Order';
                 $('#place-order-btn-text, #place-order-btn-hover-text').text(label);
+                $('.paypal-usd-note').toggle(selected === 'paypal');
             }
 
             updatePlaceOrderButtonLabel();

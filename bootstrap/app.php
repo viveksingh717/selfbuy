@@ -24,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // request body (verified per-gateway in the controller).
         $middleware->validateCsrfTokens(except: [
             'webhooks/razorpay',
+            'webhooks/stripe',
+            'webhooks/paypal',
+            'webhooks/instamojo',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

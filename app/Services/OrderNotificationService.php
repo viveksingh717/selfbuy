@@ -58,7 +58,7 @@ class OrderNotificationService
         if ($phone) {
             $sent = $this->smsService->sendMessage(
                 $phone,
-                "Your {$this->storeName()} payment of ".$this->rupees($payment->amount)." could not be completed. Your cart is still saved — please try again.",
+                "Your {$this->storeName()} payment of ".$payment->currencySymbol().number_format($payment->amount, 2)." could not be completed. Your cart is still saved — please try again.",
             );
 
             Log::info('Order notification: payment-failed SMS '.($sent ? 'sent' : 'failed'), ['payment_id' => $payment->id, 'phone' => $phone]);

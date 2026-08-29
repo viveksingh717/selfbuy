@@ -12,7 +12,7 @@
     <p>Hi {{ $customerName }},</p>
 
     <p>
-        Your payment of <strong>₹{{ number_format($payment->amount, 2) }}</strong> for your recent
+        Your payment of <strong>{{ $payment->currencySymbol() }}{{ number_format($payment->amount, 2) }}</strong> for your recent
         {{ config('app.name') }} order didn't go through, so the order wasn't placed. No money has been deducted
         for this attempt &mdash; if an amount was held by your bank, it will be released automatically within a
         few business days.

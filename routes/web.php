@@ -19,7 +19,10 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Payments\InstamojoController;
+use App\Http\Controllers\Payments\PayPalController;
 use App\Http\Controllers\Payments\RazorpayController;
+use App\Http\Controllers\Payments\StripeController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Auth;
@@ -51,9 +54,29 @@ Route::get('/payment/razorpay/{payment}', [RazorpayController::class, 'show'])->
 Route::post('/payment/razorpay/verify', [RazorpayController::class, 'verify'])->name('payment.razorpay.verify');
 Route::post('/payment/razorpay/failed', [RazorpayController::class, 'failed'])->name('payment.razorpay.failed');
 
+// Stripe Checkout is a hosted redirect flow, not an in-page widget like Razorpay's —
+// "show" bounces straight to Stripe, and Stripe itself redirects back to callback/cancel.
+Route::get('/payment/stripe/{payment}', [StripeController::class, 'show'])->name('payment.stripe.show');
+Route::get('/payment/stripe/{payment}/callback', [StripeController::class, 'callback'])->name('payment.stripe.callback');
+Route::get('/payment/stripe/{payment}/cancel', [StripeController::class, 'cancel'])->name('payment.stripe.cancel');
+
+// PayPal Checkout is likewise a hosted redirect flow (PayPal's Orders API v2).
+Route::get('/payment/paypal/{payment}', [PayPalController::class, 'show'])->name('payment.paypal.show');
+Route::get('/payment/paypal/{payment}/callback', [PayPalController::class, 'callback'])->name('payment.paypal.callback');
+Route::get('/payment/paypal/{payment}/cancel', [PayPalController::class, 'cancel'])->name('payment.paypal.cancel');
+
+// Instamojo's Payment Requests API only takes a single redirect_url — success
+// and failure both land on "callback", distinguished by a status query param
+// (see InstamojoController::callback()) — so there's no separate cancel route.
+Route::get('/payment/instamojo/{payment}', [InstamojoController::class, 'show'])->name('payment.instamojo.show');
+Route::get('/payment/instamojo/{payment}/callback', [InstamojoController::class, 'callback'])->name('payment.instamojo.callback');
+
 // Server-to-server only — trusted via signature, not session/CSRF (see bootstrap/app.php
-// for the matching CSRF exemption; Razorpay's servers can't supply a CSRF token).
+// for the matching CSRF exemption; gateway servers can't supply a CSRF token).
 Route::post('/webhooks/razorpay', [RazorpayController::class, 'webhook'])->name('webhooks.razorpay');
+Route::post('/webhooks/stripe', [StripeController::class, 'webhook'])->name('webhooks.stripe');
+Route::post('/webhooks/paypal', [PayPalController::class, 'webhook'])->name('webhooks.paypal');
+Route::post('/webhooks/instamojo', [InstamojoController::class, 'webhook'])->name('webhooks.instamojo');
 
 Route::middleware('guest')->group(function () {
     // Login/register happen via the modal on every page; these bare URLs just

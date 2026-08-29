@@ -2,12 +2,22 @@
 
 namespace App\Services\Payments\Contracts;
 
+use Illuminate\Http\Request;
+
 interface PaymentGatewayInterface
 {
     /**
      * The gateway's identifier, e.g. 'razorpay'. Matches Payment::gateway.
      */
     public function name(): string;
+
+    /**
+     * The currency this gateway actually charges in. Almost always the
+     * store's own currency (INR) — PayPal is the current exception, since
+     * its India-registered accounts can't receive INR at all. PaymentService
+     * converts the cart total to this currency before calling createOrder().
+     */
+    public function currency(): string;
 
     /**
      * Create a payment intent/order with the gateway for the given amount.
@@ -26,9 +36,12 @@ interface PaymentGatewayInterface
     public function verifyPaymentSignature(array $payload): bool;
 
     /**
-     * Verify a server-to-server webhook request's signature.
+     * Verify a server-to-server webhook request's signature. Takes the whole
+     * Request (not just a body+header pair) because gateways differ in how many
+     * headers the check needs — Razorpay/Stripe use a single signature header,
+     * PayPal's verify-webhook-signature call needs five.
      */
-    public function verifyWebhookSignature(string $rawBody, string $signatureHeader): bool;
+    public function verifyWebhookSignature(Request $request): bool;
 
     /**
      * Normalize a webhook payload into a common shape so PaymentService doesn't

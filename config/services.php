@@ -58,4 +58,29 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'merchant_id' => env('PAYPAL_MERCHANT_ID'),
+        'sandbox' => env('PAYPAL_SANDBOX', true),
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+    ],
+
+    'exchange_rate' => [
+        'inr_usd_fallback' => env('EXCHANGE_RATE_INR_USD_FALLBACK', 0.012),
+    ],
+
+    'instamojo' => [
+        'api_key' => env('INSTAMOJO_API_KEY'),
+        'auth_token' => env('INSTAMOJO_AUTH_TOKEN'),
+        'salt' => env('INSTAMOJO_SALT'),
+        'sandbox' => env('INSTAMOJO_SANDBOX', true),
+    ],
+
 ];

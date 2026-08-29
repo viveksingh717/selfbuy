@@ -148,18 +148,15 @@ class RazorpayController extends Controller
      */
     public function webhook(Request $request, ResponseService $rs)
     {
-        $rawBody = $request->getContent();
-        $signature = $request->header('X-Razorpay-Signature', '');
-
         $gateway = $this->paymentService->gateway('razorpay');
 
-        if (!$signature || !$gateway->verifyWebhookSignature($rawBody, $signature)) {
+        if (!$gateway->verifyWebhookSignature($request)) {
             Log::warning('Razorpay: webhook signature invalid or missing');
 
             return response()->json(['message' => 'Invalid signature'], 400);
         }
 
-        $payload = json_decode($rawBody, true) ?? [];
+        $payload = json_decode($request->getContent(), true) ?? [];
         $parsed = $gateway->parseWebhookEvent($payload);
 
         Log::info('Razorpay: webhook received', ['event' => $payload['event'] ?? 'unknown', 'parsed_event' => $parsed['event'], 'gateway_order_id' => $parsed['gateway_order_id']]);
