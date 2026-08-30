@@ -117,7 +117,8 @@
 <div id="left-sidebar" class="sidebar ">
     <h5 class="brand-name">
         <a href="{{ route('admin.dashboard') }}">
-            <img src="{{ asset('selfbuy-logo.svg') }}" alt="SelfBuy" class="brand-wordmark">
+            <img src="{{ asset('selfbuy-logo.svg') }}" alt="SelfBuy" class="brand-wordmark brand-wordmark-light">
+            <img src="{{ asset('selfbuy-logo-dark.svg') }}" alt="SelfBuy" class="brand-wordmark brand-wordmark-dark">
         </a>
         <a href="javascript:void(0)" class="menu_option float-right">
             <i class="fa fa-th font-16" data-toggle="tooltip" title="Grid &amp; List Toggle"></i>

@@ -39,6 +39,31 @@
 </head>
 
 <body class="font-montserrat">
+    {{-- Re-apply saved theme settings before paint to avoid a flash --}}
+    <script>
+        (function () {
+            try {
+                var cfg = JSON.parse(localStorage.getItem('selfbuy_admin_settings')) || {};
+                var body = document.body;
+                var fonts = ['font-opensans', 'font-montserrat', 'font-roboto'];
+                var font = fonts.indexOf(cfg.font) > -1 ? cfg.font : 'font-montserrat';
+                fonts.forEach(function (f) { body.classList.remove(f); });
+                body.classList.add(font);
+                var map = {
+                    'btn-darkmode': 'dark-mode',
+                    'btn-sidebar': 'sidebar_dark',
+                    'btn-iconcolor': 'iconcolor',
+                    'btn-gradient': 'gradient',
+                    'btn-rtl': 'rtl',
+                    'btn-boxlayout': 'boxlayout'
+                };
+                Object.keys(map).forEach(function (k) {
+                    if (cfg[k]) { body.classList.add(map[k]); }
+                });
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Page Loader -->
     <div class="page-loader-wrapper">
         <div class="loader">
@@ -51,7 +76,8 @@
             <div class="container">
                 <div class="hleft">
                     <a class="header-brand" href="{{ route('admin.dashboard') }}">
-                        <img src="{{ asset('selfbuy-icon.svg') }}" alt="SelfBuy" class="brand-icon">
+                        <img src="{{ asset('selfbuy-icon.svg') }}" alt="SelfBuy" class="brand-icon brand-icon-light">
+                        <img src="{{ asset('selfbuy-icon-dark.svg') }}" alt="SelfBuy" class="brand-icon brand-icon-dark">
                     </a>
                 </div>
                 <div class="hright">
@@ -92,6 +118,7 @@
             <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
             <script src="{{ asset('admin_assets/bundles/lib.vendor.bundle.js') }}"></script>
             <script src="{{ asset('admin_assets/js/core.js') }}"></script>
+            <script src="{{ asset('admin_assets/js/admin-settings.js') }}"></script>
 
             <!-- 3. Summernote -->
             <script src="{{ asset('admin_assets/bundles/summernote.bundle.js') }}"></script>

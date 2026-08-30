@@ -15,6 +15,20 @@
     object-fit: contain;
     display: block;
 }
+/* swap to the light icon when the header rail is dark */
+#header_top .brand-icon-dark {
+    display: none;
+}
+body.dark-mode #header_top .brand-icon-light,
+#header_top.dark .brand-icon-light,
+body.sidebar_dark.offcanvas-active #header_top .brand-icon-light {
+    display: none;
+}
+body.dark-mode #header_top .brand-icon-dark,
+#header_top.dark .brand-icon-dark,
+body.sidebar_dark.offcanvas-active #header_top .brand-icon-dark {
+    display: block;
+}
 @media screen and (min-width: 1201px) {
     #header_top .hleft {
         justify-content: center;
@@ -38,5 +52,17 @@
     width: auto;
     max-width: 150px;
     object-fit: contain;
+    display: block;
+}
+/* swap to the light logo when the sidebar is dark */
+#left-sidebar .brand-name .brand-wordmark-dark {
+    display: none;
+}
+body.dark-mode #left-sidebar .brand-name .brand-wordmark-light,
+body.sidebar_dark #left-sidebar .brand-name .brand-wordmark-light {
+    display: none;
+}
+body.dark-mode #left-sidebar .brand-name .brand-wordmark-dark,
+body.sidebar_dark #left-sidebar .brand-name .brand-wordmark-dark {
     display: block;
 }
