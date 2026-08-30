@@ -51,6 +51,28 @@ Route::delete('/wishlist/remove/{id}', [WishlistController::class, 'destroy'])->
 // need an account, only writing a review does (see the 'auth' group below).
 Route::post('/reviews/vote', [ReviewVoteController::class, 'store'])->name('reviews.vote');
 
+Route::get('/about', [HomeController::class, 'about'])->name('about');
+
+Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
+
+Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+
+Route::get('/payment', [HomeController::class, 'payment'])->name('payment');
+
+Route::get('/money-back-guarantee', [HomeController::class, 'money_back_guarantee'])->name('money_back_guarantee');
+
+Route::get('/refund-policy', [HomeController::class, 'refund_policy'])->name('refund_policy');
+
+Route::get('/shipping', [HomeController::class, 'shipping'])->name('shipping');
+
+Route::get('/terms_conditions', [HomeController::class, 'terms_and_conditions'])->name('terms_conditions');
+
+Route::get('/privacy_policy', [HomeController::class, 'privacy_policy'])->name('privacy_policy');
+
+Route::get('/track_order', [HomeController::class, 'track_my_order'])->name('track_order');
+
+Route::get('/blog', [HomeController::class, 'blog'])->name('blog');
+
 Route::middleware('auth')->group(function () {
     Route::get('/myaccount', [AccountController::class, 'index'])->name('myaccount');
     Route::post('/myaccount/details', [AccountController::class, 'updateDetails'])->name('account.details.update');

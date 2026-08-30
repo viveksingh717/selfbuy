@@ -28,11 +28,10 @@
                     <li>
                         <a href="#">Links</a>
                         <ul>
-                            <li><a href="tel:#"><i class="icon-phone"></i>Call: +91 900 406 9694</a></li>
-                            <li><a href="{{ route('wishlist.index') }}"><i class="icon-heart-o"></i>My Wishlist
-                                    <span>(<span class="wishlist-count">{{ $headerWishlistCount ?? 0 }}</span>)</span></a></li>
-                            <li><a href="about.html">About Us</a></li>
-                            <li><a href="contact.html">Contact Us</a></li>
+                            <li><a href="tel:+919004069694"><i class="icon-phone"></i>Call: +91 90040 69694</a></li>
+                            <li><a href="{{ route('about') }}"><i class="icon-info-circle"></i>About Us</a></li>
+                            <li><a href="{{ route('contact') }}"><i class="icon-envelope"></i>Contact Us</a></li>
+                            <li><a href="{{ route('blog') }}"><i class="icon-blog"></i>Blog</a></li>
                             @guest
                                 <li><a href="#signin-modal" data-toggle="modal"><i class="icon-user"></i>Login</a></li>
                                 <li><a href="#signin-modal" data-toggle="modal" data-auth-tab="register-tab"><i class="icon-user"></i>Register</a></li>

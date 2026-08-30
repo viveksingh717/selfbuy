@@ -27,10 +27,10 @@
                         <h4 class="widget-title">Useful Links</h4><!-- End .widget-title -->
 
                         <ul class="widget-list">
-                            <li><a href="about.html">About SelfBuy</a></li>
-                            <li><a href="#">How to shop on SelfBuy</a></li>
-                            <li><a href="#">FAQ</a></li>
-                            <li><a href="contact.html">Contact us</a></li>
+                            <li><a href="{{ route('home') }}">Home</a></li>
+                            <li><a href="{{ route('about') }}">About Us</a></li>
+                            <li><a href="{{ route('faq') }}">FAQ</a></li>
+                            <li><a href="{{ route('contact') }}">Contact us</a></li>
                             @guest
                                 <li><a href="#signin-modal" data-toggle="modal">Log in</a></li>
                             @else
@@ -73,7 +73,7 @@
                             <li><a href="{{ route('cart.index') }}">View Cart</a></li>
                             <li><a href="{{ route('wishlist.index') }}">My Wishlist</a></li>
                             <li><a href="#">Track My Order</a></li>
-                            <li><a href="#">Help</a></li>
+                            {{-- <li><a href="#">Help</a></li> --}}
                         </ul><!-- End .widget-list -->
                     </div><!-- End .widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
@@ -83,7 +83,7 @@
 
     <div class="footer-bottom">
         <div class="container">
-            <p class="footer-copyright">Copyright © 2026 SelfBuy Store. All Rights Reserved.</p>
+            <p class="footer-copyright">Copyright © {{ date('Y') }} SelfBuy Store. All Rights Reserved.</p>
             <!-- End .footer-copyright -->
             <figure class="footer-payments">
                 <img src="{{ asset('assets/images/payments.png') }}" alt="Payment methods" width="272"
