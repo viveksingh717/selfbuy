@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CouponModel;
+use App\Models\Order;
 use App\Models\ProductAttribute;
 use App\Models\ProductGalleryImage;
+use App\Models\Review;
 use App\Models\SubCategory;
 use App\Models\TaxModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -88,5 +90,31 @@ class ProductModel extends Model
         return $this->hasMany(ProductAttribute::class, 'product_id');
     }
 
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'product_id');
+    }
 
+    public function averageRating(): float
+    {
+        return round((float) $this->reviews()->avg('rating'), 1);
+    }
+
+    public function reviewsCount(): int
+    {
+        return $this->reviews()->count();
+    }
+
+    /**
+     * Reviews are gated on this — only a customer who actually has an order
+     * containing this product may write one (see ReviewController::store()
+     * and ShopController::productDetails()). Reading reviews stays open to
+     * everyone, logged in or not.
+     */
+    public function purchasedBy(int $userId): bool
+    {
+        return Order::where('user_id', $userId)
+            ->whereHas('items', fn ($q) => $q->where('product_id', $this->id))
+            ->exists();
+    }
 }

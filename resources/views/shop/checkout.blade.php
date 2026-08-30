@@ -47,20 +47,21 @@
                         $userNameParts = $user ? explode(' ', $user->name, 2) : [null, null];
 
                         // Priority: whatever they just typed (survives a validation error) →
-                        // their last order's billing details (has the full address) → their
-                        // account profile (name/email/phone only, no address fields exist
-                        // there) → a sensible default.
+                        // their last order's billing details → a sensible default. The
+                        // address itself is the one exception: the account's own saved
+                        // address (My Account > Address) wins over the last order's, since
+                        // saving one there is a deliberate "use this going forward" choice.
                         $prefill = [
                             'first_name' => $lastOrder?->first_name ?? $userNameParts[0],
                             'last_name' => $lastOrder?->last_name ?? ($userNameParts[1] ?? ''),
                             'email' => $lastOrder?->email ?? ($user->email ?? ''),
                             'phone' => $lastOrder?->phone ?? ($user->phone_number ?? ''),
-                            'address_line1' => $lastOrder?->address_line1 ?? ($user->address ?? ''),
-                            'address_line2' => $lastOrder?->address_line2 ?? '',
-                            'city' => $lastOrder?->city ?? '',
-                            'state' => $lastOrder?->state ?? '',
-                            'postal_code' => $lastOrder?->postal_code ?? '',
-                            'country' => $lastOrder?->country ?? 'India',
+                            'address_line1' => $user->address_line1 ?? $lastOrder?->address_line1 ?? '',
+                            'address_line2' => $user->address_line2 ?? $lastOrder?->address_line2 ?? '',
+                            'city' => $user->city ?? $lastOrder?->city ?? '',
+                            'state' => $user->state ?? $lastOrder?->state ?? '',
+                            'postal_code' => $user->postal_code ?? $lastOrder?->postal_code ?? '',
+                            'country' => $user->country ?? $lastOrder?->country ?? 'India',
                         ];
                     @endphp
                     <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}">

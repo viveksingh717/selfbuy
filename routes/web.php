@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\TaxController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewVoteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Payments\InstamojoController;
 use App\Http\Controllers\Payments\PayPalController;
@@ -43,6 +46,18 @@ Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('car
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 Route::delete('/wishlist/remove/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove');
+
+// Guest-accessible like cart/wishlist above — voting Helpful/Unhelpful doesn't
+// need an account, only writing a review does (see the 'auth' group below).
+Route::post('/reviews/vote', [ReviewVoteController::class, 'store'])->name('reviews.vote');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/myaccount', [AccountController::class, 'index'])->name('myaccount');
+    Route::post('/myaccount/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
+    Route::post('/myaccount/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::post('/myaccount/address', [AccountController::class, 'updateAddress'])->name('account.address.update');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+});
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
@@ -111,6 +126,7 @@ Route::get('/test', function () {
 });
 
 Route::post('/generate_slug', [CommonController::class, 'generate_slug'])->name('generate_slug');
+
 Route::prefix('admin')->group(function () {
     Route::get('/', function () {
 

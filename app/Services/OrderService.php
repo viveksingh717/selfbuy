@@ -134,6 +134,23 @@ class OrderService
         return $isOwner ? $order : null;
     }
 
+    /**
+     * Attaches any guest orders placed under this email to the account that
+     * just logged in — same idea as CartService::mergeGuestCartIntoUser() /
+     * WishlistService::mergeGuestWishlistIntoUser(), but matched by email
+     * instead of session id, since a guest order can be days or weeks old by
+     * the time its owner creates or logs into an account — its checkout
+     * session is long gone, but the email on the order still identifies them.
+     * Matching by email is safe here because it only ever runs at the moment
+     * this account's owner has just proven control of that exact email via OTP.
+     */
+    public function linkGuestOrdersToUser(string $email, int $userId): int
+    {
+        return Order::whereNull('user_id')
+            ->where('email', $email)
+            ->update(['user_id' => $userId]);
+    }
+
     private function createOrder(
         array $customerData,
         array $items,

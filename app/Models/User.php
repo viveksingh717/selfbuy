@@ -3,12 +3,15 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\AccountDetailsChangedMail;
+use App\Mail\PasswordChangedMail;
 use App\Mail\PasswordResetMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class User extends Authenticatable
 {
@@ -26,6 +29,12 @@ class User extends Authenticatable
         'remember_token',
         'phone_number',
         'address',
+        'address_line1',
+        'address_line2',
+        'city',
+        'state',
+        'postal_code',
+        'country',
         'status',
         'role_type',
         'is_verified',
@@ -64,6 +73,39 @@ class User extends Authenticatable
             Log::info('Password reset: email dispatched', ['user_id' => $this->id, 'to' => $this->email]);
         } catch (\Throwable $e) {
             Log::error('Password reset: email send failed: '.$e->getMessage(), ['user_id' => $this->id, 'to' => $this->email]);
+        }
+    }
+
+    /**
+     * Sent whenever the password actually changes — both from the "My Account"
+     * change-password form and, for symmetry, the forgot-password flow — so a
+     * customer who didn't request either one still finds out.
+     */
+    public function sendPasswordChangedNotification(): void
+    {
+        try {
+            Mail::to($this->email)->send(new PasswordChangedMail($this->name, now()->format('d M Y, h:i A')));
+            Log::info('Password changed: notification email dispatched', ['user_id' => $this->id, 'to' => $this->email]);
+        } catch (\Throwable $e) {
+            Log::error('Password changed: notification email failed: '.$e->getMessage(), ['user_id' => $this->id, 'to' => $this->email]);
+        }
+    }
+
+    /**
+     * Sent whenever name/email/phone actually change via "My Account" — always
+     * to the *original* email (passed in explicitly), not $this->email, so that
+     * if the email itself was changed, the real owner still gets notified even
+     * though $this->email is now the new address.
+     *
+     * @param  array<int, array{label: string, old: string, new: string}>  $changes
+     */
+    public function sendAccountDetailsChangedNotification(string $notifyEmail, array $changes): void
+    {
+        try {
+            Mail::to($notifyEmail)->send(new AccountDetailsChangedMail($this->name, $changes, now()->format('d M Y, h:i A')));
+            Log::info('Account details changed: notification email dispatched', ['user_id' => $this->id, 'to' => $notifyEmail, 'fields' => array_column($changes, 'label')]);
+        } catch (Throwable $e) {
+            Log::error('Account details changed: notification email failed: '.$e->getMessage(), ['user_id' => $this->id, 'to' => $notifyEmail]);
         }
     }
 }

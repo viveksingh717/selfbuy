@@ -61,6 +61,7 @@ class PasswordResetController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill(['password' => Hash::make($password)])->save();
+                $user->sendPasswordChangedNotification();
             }
         );
 

@@ -38,6 +38,9 @@
                                     <th>Price</th>
                                     <th>Qty</th>
                                     <th>Total</th>
+                                    @auth
+                                        <th></th>
+                                    @endauth
                                 </tr>
                             </thead>
                             <tbody>
@@ -52,6 +55,13 @@
                                         <td>₹{{ number_format((float) $item->unit_price + (float) $item->extra_price, 2) }}</td>
                                         <td>{{ $item->qty }}</td>
                                         <td>₹{{ number_format($item->line_total, 2) }}</td>
+                                        @auth
+                                            <td>
+                                                @if ($item->product)
+                                                    <a href="{{ route('product.details', $item->product->product_slug) }}#product-review-tab" class="btn btn-outline-primary-2 btn-sm">Write a Review</a>
+                                                @endif
+                                            </td>
+                                        @endauth
                                     </tr>
                                 @endforeach
                             </tbody>

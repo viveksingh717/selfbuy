@@ -3,6 +3,11 @@
 @section('subTitle', $product->product_name)
 
 @section('style')
+    <style>
+        .star-rating-input { font-size: 2.2rem; line-height: 1; }
+        .star-rating-input .star-rating-icon { cursor: pointer; color: #cccccc; margin-right: .3rem; transition: color .15s ease; }
+        .star-rating-input .star-rating-icon.icon-star { color: #fcb941; }
+    </style>
 @endsection
 
 @php
@@ -87,6 +92,15 @@
                                 <h1 class="product-title">{{ $product->product_name }}</h1>
                                 <!-- End .product-title -->
 
+                                @if ($product->reviewsCount() > 0)
+                                    <div class="ratings-container">
+                                        <div class="ratings">
+                                            <div class="ratings-val" style="width: {{ $product->averageRating() * 20 }}%;"></div>
+                                        </div><!-- End .ratings -->
+                                        <a href="#product-review-tab" class="rating-reviews js-open-reviews">({{ $product->reviewsCount() }} review{{ $product->reviewsCount() > 1 ? 's' : '' }})</a>
+                                    </div><!-- End .ratings-container -->
+                                @endif
+
                                 <div class="product-price" id="product-price">
                                     @if ($product->discount > 0)
                                         <span class="out-price">₹{{ number_format($product->original_price, 2) }}</span>
@@ -165,8 +179,8 @@
                 </div><!-- End .product-details-top -->
             </div><!-- End .container -->
 
-            <div class="product-details-tab product-details-extended">
-                <div class="container">
+            <div class="container">
+                <div class="product-details-tab">
                     <ul class="nav nav-pills justify-content-center" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="product-desc-link" data-toggle="tab" href="#product-desc-tab"
@@ -182,26 +196,27 @@
                                 href="#product-shipping-tab" role="tab" aria-controls="product-shipping-tab"
                                 aria-selected="false">Shipping & Returns</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="product-review-link" data-toggle="tab"
+                                href="#product-review-tab" role="tab" aria-controls="product-review-tab"
+                                aria-selected="false">Reviews ({{ $product->reviewsCount() }})</a>
+                        </li>
                     </ul>
-                </div><!-- End .container -->
 
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="product-desc-tab" role="tabpanel"
-                        aria-labelledby="product-desc-link">
-                        <div class="product-desc-content">
-                            <div class="container">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="product-desc-tab" role="tabpanel"
+                            aria-labelledby="product-desc-link">
+                            <div class="product-desc-content">
                                 {!! $product->description !!}
 
                                 @if ($product->additional_description)
                                     {!! $product->additional_description !!}
                                 @endif
-                            </div><!-- End .container -->
-                        </div><!-- End .product-desc-content -->
-                    </div><!-- .End .tab-pane -->
-                    <div class="tab-pane fade" id="product-info-tab" role="tabpanel"
-                        aria-labelledby="product-info-link">
-                        <div class="product-desc-content">
-                            <div class="container">
+                            </div><!-- End .product-desc-content -->
+                        </div><!-- .End .tab-pane -->
+                        <div class="tab-pane fade" id="product-info-tab" role="tabpanel"
+                            aria-labelledby="product-info-link">
+                            <div class="product-desc-content">
                                 <h3>Product Information</h3>
                                 <ul>
                                     <li><strong>SKU:</strong> {{ $product->sku }}</li>
@@ -211,24 +226,171 @@
                                     <li><strong>Category:</strong> {{ optional($product->subCategory)->subcategory_name ?? optional($product->category)->category_name }}</li>
                                     <li><strong>Availability:</strong> {{ $inStock ? $product->qty . ' in stock' : 'Out of stock' }}</li>
                                 </ul>
-                            </div><!-- End .container -->
-                        </div><!-- End .product-desc-content -->
-                    </div><!-- .End .tab-pane -->
-                    <div class="tab-pane fade" id="product-shipping-tab" role="tabpanel"
-                        aria-labelledby="product-shipping-link">
-                        <div class="product-desc-content">
-                            <div class="container">
+                            </div><!-- End .product-desc-content -->
+                        </div><!-- .End .tab-pane -->
+                        <div class="tab-pane fade" id="product-shipping-tab" role="tabpanel"
+                            aria-labelledby="product-shipping-link">
+                            <div class="product-desc-content">
                                 <h3>Delivery & returns</h3>
                                 <p>We deliver to over 100 countries around the world. For full details of the delivery
                                     options we offer, please view our <a href="#">Delivery information</a><br>
                                     We hope you'll love every purchase, but if you ever need to return an item you can do so
                                     within a month of receipt. For full details of how to make a return, please view our <a
                                         href="#">Returns information</a></p>
-                            </div><!-- End .container -->
-                        </div><!-- End .product-desc-content -->
-                    </div><!-- .End .tab-pane -->
-                </div><!-- End .tab-content -->
-            </div><!-- End .product-details-tab -->
+                            </div><!-- End .product-desc-content -->
+                        </div><!-- .End .tab-pane -->
+                        <div class="tab-pane fade" id="product-review-tab" role="tabpanel"
+                            aria-labelledby="product-review-link">
+                            <div class="reviews">
+                                <h3>Reviews ({{ $product->reviewsCount() }})</h3>
+
+                                @if ($reviews->isNotEmpty())
+                                    <div class="ratings-container mb-4">
+                                        <div class="ratings">
+                                            <div class="ratings-val" style="width: {{ $product->averageRating() * 20 }}%;"></div>
+                                        </div><!-- End .ratings -->
+                                        <span class="ml-2">{{ $product->averageRating() }} out of 5</span>
+                                    </div><!-- End .ratings-container -->
+                                @endif
+
+                                @forelse ($reviews as $review)
+                                    @php
+                                        $isOwnReview = $canReview && Auth::guard('web')->check() && $review->user_id === Auth::guard('web')->id();
+                                    @endphp
+                                    <div class="review">
+                                        <div class="row no-gutters">
+                                            <div class="col-auto">
+                                                <h4>{{ $review->user->name ?? 'Anonymous' }}</h4>
+                                                @if ($review->is_verified_purchase)
+                                                    <span class="badge badge-success">Verified Purchase</span>
+                                                @endif
+                                                <div class="ratings-container">
+                                                    <div class="ratings">
+                                                        <div class="ratings-val" style="width: {{ $review->rating * 20 }}%;"></div>
+                                                    </div><!-- End .ratings -->
+                                                </div><!-- End .rating-container -->
+                                                <span class="review-date">{{ $review->created_at->diffForHumans() }}</span>
+                                            </div><!-- End .col -->
+                                            <div class="col">
+                                                <div class="review-display">
+                                                    @if ($review->title)
+                                                        <h4>{{ $review->title }}</h4>
+                                                    @endif
+
+                                                    <div class="review-content">
+                                                        <p>{{ $review->comment }}</p>
+                                                    </div><!-- End .review-content -->
+
+                                                    <div class="review-action">
+                                                        <a href="#" class="review-vote-btn" data-review-id="{{ $review->id }}" data-helpful="1"><i class="icon-thumbs-up"></i>Helpful ({{ $review->helpful_count }})</a>
+                                                        <a href="#" class="review-vote-btn" data-review-id="{{ $review->id }}" data-helpful="0"><i class="icon-thumbs-down"></i>Unhelpful ({{ $review->unhelpful_count }})</a>
+                                                        @if ($isOwnReview)
+                                                            <a href="#" class="review-edit-toggle">Edit</a>
+                                                        @endif
+                                                    </div><!-- End .review-action -->
+                                                </div><!-- End .review-display -->
+
+                                                @if ($isOwnReview)
+                                                    <form class="review-submit-form review-edit-form" action="{{ route('reviews.store') }}" method="POST" style="display: none;">
+                                                        @csrf
+                                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                                                        <label>Rating *</label>
+                                                        <div class="star-rating-input mb-2">
+                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                <i class="star-rating-icon {{ $i <= $review->rating ? 'icon-star' : 'icon-star-o' }}" data-value="{{ $i }}"></i>
+                                                            @endfor
+                                                            <input type="hidden" name="rating" class="review-rating-input" value="{{ $review->rating }}" required>
+                                                        </div>
+
+                                                        <label>Title (optional)</label>
+                                                        <input type="text" name="title" class="form-control mb-2" value="{{ $review->title }}">
+
+                                                        <label>Review *</label>
+                                                        <textarea name="comment" class="form-control mb-2" rows="4" required>{{ $review->comment }}</textarea>
+
+                                                        <button type="submit" class="btn btn-outline-primary-2 btn-sm">Save</button>
+                                                        <button type="button" class="btn btn-outline-dark-2 btn-sm review-edit-cancel">Cancel</button>
+                                                    </form><!-- End .review-edit-form -->
+                                                @endif
+                                            </div><!-- End .col-auto -->
+                                        </div><!-- End .row -->
+                                    </div><!-- End .review -->
+                                @empty
+                                    <p>No reviews yet. Be the first to review this product!</p>
+                                @endforelse
+
+                                @if ($reviews->hasPages())
+                                    <nav aria-label="Reviews page navigation">
+                                        <ul class="pagination justify-content-center">
+                                            <li class="page-item {{ $reviews->onFirstPage() ? 'disabled' : '' }}">
+                                                <a class="page-link page-link-prev"
+                                                    href="{{ $reviews->onFirstPage() ? '#' : $reviews->previousPageUrl() }}"
+                                                    aria-label="Previous"
+                                                    @if ($reviews->onFirstPage()) tabindex="-1" aria-disabled="true" @endif>
+                                                    <span aria-hidden="true"><i class="icon-long-arrow-left"></i></span>Prev
+                                                </a>
+                                            </li>
+                                            @for ($i = 1; $i <= $reviews->lastPage(); $i++)
+                                                <li class="page-item {{ $reviews->currentPage() == $i ? 'active' : '' }}"
+                                                    @if ($reviews->currentPage() == $i) aria-current="page" @endif>
+                                                    <a class="page-link" href="{{ $reviews->url($i) }}">{{ $i }}</a>
+                                                </li>
+                                            @endfor
+                                            <li class="page-item-total">of {{ $reviews->lastPage() }}</li>
+                                            <li class="page-item {{ $reviews->hasMorePages() ? '' : 'disabled' }}">
+                                                <a class="page-link page-link-next"
+                                                    href="{{ $reviews->hasMorePages() ? $reviews->nextPageUrl() : '#' }}"
+                                                    aria-label="Next">
+                                                    Next <span aria-hidden="true"><i class="icon-long-arrow-right"></i></span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                @endif
+
+                                {{-- <hr class="divider"> --}}
+
+                                @auth
+                                    @if ($canReview && !$userReview)
+                                        <h3>Write a Review</h3>
+                                        <form class="review-submit-form" action="{{ route('reviews.store') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+
+                                            @php $initialRating = (int) old('rating', 0); @endphp
+                                            <label>Rating *</label>
+                                            <div class="star-rating-input mb-2">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <i class="star-rating-icon {{ $i <= $initialRating ? 'icon-star' : 'icon-star-o' }}" data-value="{{ $i }}"></i>
+                                                @endfor
+                                                <input type="hidden" name="rating" class="review-rating-input" value="{{ $initialRating ?: '' }}" required>
+                                            </div>
+
+                                            <label>Title (optional)</label>
+                                            <input type="text" name="title" class="form-control mb-2" value="{{ old('title') }}">
+
+                                            <label>Review *</label>
+                                            <textarea name="comment" class="form-control mb-2" rows="4" required>{{ old('comment') }}</textarea>
+
+                                            <button type="submit" class="btn btn-outline-primary-2">
+                                                <span>SUBMIT REVIEW</span>
+                                                <i class="icon-long-arrow-right"></i>
+                                            </button>
+                                        </form>
+                                    @elseif ($canReview && $userReview)
+                                        <p class="text-muted">You've already reviewed this product — click <strong>Edit</strong> on your review above to change it.</p>
+                                    @else
+                                        <p>Only customers who have purchased this product can write a review.</p>
+                                    @endif
+                                @else
+                                    <p><a href="#signin-modal" data-toggle="modal">Sign in</a> to write a review.</p>
+                                @endauth
+                            </div><!-- End .reviews -->
+                        </div><!-- .End .tab-pane -->
+                    </div><!-- End .tab-content -->
+                </div><!-- End .product-details-tab -->
+            </div><!-- End .container -->
 
             @if ($relatedProducts->isNotEmpty())
                 <div class="container">
@@ -310,6 +472,26 @@
 @section('script')
     <script>
         $(function () {
+            // Opens the Reviews tab and scrolls to it — used both for a
+            // "Write a Review" link elsewhere (e.g. the order page, after a
+            // purchase) landing here with #product-review-tab in the URL, and
+            // for the review-count link next to the star rating up top.
+            function openReviewsTab() {
+                $('#product-review-link').tab('show');
+                setTimeout(function () {
+                    $('html, body').animate({ scrollTop: $('#product-review-tab').offset().top - 100 }, 400);
+                }, 150);
+            }
+
+            if (window.location.hash === '#product-review-tab') {
+                openReviewsTab();
+            }
+
+            $(document).on('click', '.js-open-reviews', function (e) {
+                e.preventDefault();
+                openReviewsTab();
+            });
+
             var variantAttributes = {!! json_encode($product->attributes->map(function ($a) {
                 return [
                     'id' => $a->id,
@@ -532,6 +714,112 @@
                         var msg = xhr.responseJSON && xhr.responseJSON.message
                             ? xhr.responseJSON.message
                             : 'Failed to update wishlist';
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                    }
+                });
+            });
+
+            // Star-rating input: click a star to select that rating; icons up to
+            // and including it fill in, the rest stay outlined. A hover preview
+            // is optional polish — this keeps it to click-to-select only. Scoped
+            // via .closest() rather than an id, since the write-review form and
+            // an own-review edit form can each carry one of these.
+            $(document).on('click', '.star-rating-icon', function () {
+                var value = $(this).data('value');
+                var $widget = $(this).closest('.star-rating-input');
+
+                $widget.find('.star-rating-icon').each(function () {
+                    var starValue = $(this).data('value');
+                    $(this).toggleClass('icon-star', starValue <= value).toggleClass('icon-star-o', starValue > value);
+                });
+
+                $widget.find('.review-rating-input').val(value);
+            });
+
+            // Shared by the "Write a Review" form and every own-review inline
+            // edit form (both carry .review-submit-form) — same endpoint
+            // (an upsert), so one handler covers writing and editing alike.
+            $(document).on('submit', '.review-submit-form', function (e) {
+                e.preventDefault();
+                var $form = $(this);
+
+                if (!$form.find('.review-rating-input').val()) {
+                    Swal.fire({ icon: 'warning', title: 'Please select a rating' });
+                    return;
+                }
+
+                $.ajax({
+                    url: $form.attr('action'),
+                    method: 'POST',
+                    data: $form.serialize(),
+                    success: function (res) {
+                        if (!res.success) {
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                            return;
+                        }
+
+                        // Reload so the review list, average rating and tab count all
+                        // recalculate server-side rather than hand-building that here.
+                        Swal.fire({ icon: 'success', title: res.message, timer: 1200, showConfirmButton: false })
+                            .then(function () { window.location.reload(); });
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.validation) {
+                            var firstError = Object.values(xhr.responseJSON.validation)[0];
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: firstError });
+                            return;
+                        }
+
+                        var msg = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
+                            : 'Failed to submit review';
+                        Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
+                    }
+                });
+            });
+
+            // Own-review inline edit: swap the read-only display for the form
+            // in place, no page reload just to start editing.
+            $(document).on('click', '.review-edit-toggle', function (e) {
+                e.preventDefault();
+                var $col = $(this).closest('.col');
+                $col.find('.review-display').hide();
+                $col.find('.review-edit-form').show();
+            });
+
+            $(document).on('click', '.review-edit-cancel', function (e) {
+                e.preventDefault();
+                var $col = $(this).closest('.col');
+                $col.find('.review-edit-form').hide();
+                $col.find('.review-display').show();
+            });
+
+            // Helpful/Unhelpful voting — open to guests too (see reviews.vote
+            // route), so no login check here. Toggling the same vote again
+            // removes it server-side; the returned counts are always the
+            // current truth, so just redraw both buttons from them.
+            $(document).on('click', '.review-vote-btn', function (e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var $actions = $btn.closest('.review-action');
+
+                $.ajax({
+                    url: '{{ route('reviews.vote') }}',
+                    method: 'POST',
+                    data: { review_id: $btn.data('review-id'), is_helpful: $btn.data('helpful') },
+                    success: function (res) {
+                        if (!res.success) {
+                            Swal.fire({ icon: 'error', title: 'Oops...', text: res.message });
+                            return;
+                        }
+
+                        $actions.find('[data-helpful="1"]').html('<i class="icon-thumbs-up"></i>Helpful (' + res.data.helpful_count + ')');
+                        $actions.find('[data-helpful="0"]').html('<i class="icon-thumbs-down"></i>Unhelpful (' + res.data.unhelpful_count + ')');
+                    },
+                    error: function (xhr) {
+                        var msg = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
+                            : 'Something went wrong';
                         Swal.fire({ icon: 'error', title: 'Oops...', text: msg });
                     }
                 });

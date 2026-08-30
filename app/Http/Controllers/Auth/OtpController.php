@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\OrderService;
 use App\Services\OtpService;
 use App\Services\ResponseService;
 use App\Services\WishlistService;
@@ -19,7 +20,7 @@ class OtpController extends Controller
     {
     }
 
-    public function verify(Request $request, ResponseService $rs, CartService $cartService, WishlistService $wishlistService)
+    public function verify(Request $request, ResponseService $rs, CartService $cartService, WishlistService $wishlistService, OrderService $orderService)
     {
         $validator = Validator::make($request->all(), [
             'otp' => 'required|digits:6',
@@ -56,6 +57,7 @@ class OtpController extends Controller
 
         $cartService->mergeGuestCartIntoUser($preAuthSessionId, $user->id);
         $wishlistService->mergeGuestWishlistIntoUser($preAuthSessionId, $user->id);
+        $orderService->linkGuestOrdersToUser($user->email, $user->id);
 
         $request->session()->forget(['2fa_user_id', '2fa_purpose', '2fa_remember']);
 

@@ -37,7 +37,7 @@
                                 <li><a href="#signin-modal" data-toggle="modal"><i class="icon-user"></i>Login</a></li>
                                 <li><a href="#signin-modal" data-toggle="modal" data-auth-tab="register-tab"><i class="icon-user"></i>Register</a></li>
                             @else
-                                <li><a href="javascript:void(0)"><i class="icon-user"></i>{{ Auth::user()->name }}</a></li>
+                                <li><a href="{{ route('myaccount') }}"><i class="icon-user"></i>{{ Auth::user()->name }}</a></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf

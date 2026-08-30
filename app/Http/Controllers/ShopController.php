@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\CategoryService;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
@@ -77,6 +78,21 @@ class ShopController extends Controller
 
         $data['product'] = $product;
         $data['relatedProducts'] = $this->productService->getRelatedProducts($product);
+        $data['reviews'] = $product->reviews()
+            ->with('user')
+            ->withCount([
+                'votes as helpful_count' => fn ($q) => $q->where('is_helpful', true),
+                'votes as unhelpful_count' => fn ($q) => $q->where('is_helpful', false),
+            ])
+            ->latest()
+            ->paginate(5)
+            ->fragment('product-review-tab');
+        $data['userReview'] = Auth::guard('web')->check()
+            ? $product->reviews()->where('user_id', Auth::guard('web')->id())->first()
+            : null;
+        $data['canReview'] = Auth::guard('web')->check()
+            ? $product->purchasedBy(Auth::guard('web')->id())
+            : false;
 
         return view('shop.product_details', $data);
     }
