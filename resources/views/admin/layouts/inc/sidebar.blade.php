@@ -116,9 +116,11 @@
 {{-- Leftside bar --}}
 <div id="left-sidebar" class="sidebar ">
     <h5 class="brand-name">
-        SelfBuy
+        <a href="{{ route('admin.dashboard') }}">
+            <img src="{{ asset('selfbuy-logo.svg') }}" alt="SelfBuy" class="brand-wordmark">
+        </a>
         <a href="javascript:void(0)" class="menu_option float-right">
-            <i class="icon-grid font-16" data-toggle="tooltip" title="Grid & List Toggle"></i>
+            <i class="fa fa-th font-16" data-toggle="tooltip" title="Grid &amp; List Toggle"></i>
         </a>
     </h5>
 

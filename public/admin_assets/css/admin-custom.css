@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Admin custom overrides
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Branding
+   -------------------------------------------------------------------------- */
+#header_top .hleft .header-brand {
+    padding: 0;
+    margin: 0;
+}
+#header_top .brand-icon {
+    width: 40px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+}
+@media screen and (min-width: 1201px) {
+    #header_top .hleft {
+        justify-content: center;
+        width: 100%;
+    }
+    #header_top .brand-icon {
+        width: 46px;
+        height: 40px;
+    }
+}
+
+#left-sidebar .brand-name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 10px;
+    min-height: 32px;
+}
+#left-sidebar .brand-name .brand-wordmark {
+    height: 24px;
+    width: auto;
+    max-width: 150px;
+    object-fit: contain;
+    display: block;
+}

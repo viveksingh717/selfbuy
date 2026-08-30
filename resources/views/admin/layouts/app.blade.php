@@ -28,6 +28,7 @@
     <!-- Core css -->
     <link rel="stylesheet" href="{{ asset('admin_assets/css/main.css') }}" />
     <link rel="stylesheet" href="{{ asset('admin_assets/css/theme1.css') }}" />
+    <link rel="stylesheet" href="{{ asset('admin_assets/css/admin-custom.css') }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
     @vite('resources/js/module/admin.js')
@@ -49,13 +50,9 @@
         <div id="header_top" class="header_top">
             <div class="container">
                 <div class="hleft">
-                    {{-- <a class="header-brand" href="{{route('admin.dashboard')}}"></a> --}}
-
-                    <a class="header-brand" href="{{ route('admin.dashboard') }}"> <img
-                            src="{{ asset('shop_logo.png') }}" alt="logo" width="30" height="30"
-                            style="object-fit: contain;"></a>
-
-
+                    <a class="header-brand" href="{{ route('admin.dashboard') }}">
+                        <img src="{{ asset('selfbuy-icon.svg') }}" alt="SelfBuy" class="brand-icon">
+                    </a>
                 </div>
                 <div class="hright">
                     <div class="dropdown">
