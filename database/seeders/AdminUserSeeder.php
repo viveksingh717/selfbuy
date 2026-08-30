@@ -16,7 +16,7 @@ class AdminUserSeeder extends Seeder
     {
         
         User::updateOrCreate(
-            ['email' => 'admin@gmail.com'],
+            ['email' => 'viveksmacbook07@gmail.com'],
             [
                 'name' => 'Vivek Singh',
                 'password' => Hash::make('password'),
@@ -25,9 +25,9 @@ class AdminUserSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'rohit@gmail.com'],
+            ['email' => 'vs4092433@gmail.com'],
             [
-                'name' => 'Rohan Sharma',
+                'name' => 'Admin Ruler',
                 'password' => Hash::make('password'),
                 'role_type' => 2
             ]

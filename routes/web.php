@@ -166,6 +166,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/register', [AuthController::class, 'register'])->name('admin.register');
         Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process');
         Route::get('/terms_condition', [AuthController::class, 'term_condition'])->name('admin.terms_condition');
+        Route::get('/forget_password', [AuthController::class, 'forget_password'])->name('admin.forget_password');
+        Route::post('/forget_password', [AuthController::class, 'sendResetLink'])->name('admin.password.email');
+        Route::get('/reset_password/{token}', [AuthController::class, 'showResetForm'])->name('admin.password.reset');
+        Route::post('/reset_password', [AuthController::class, 'reset_password'])->name('admin.reset_password');
     });
 
     // Routes for authenticated admin users (adminAuth middleware applied)

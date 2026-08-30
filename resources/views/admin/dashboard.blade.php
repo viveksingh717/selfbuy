@@ -12,7 +12,7 @@
             <div class="col-lg-12">
                 <div class="mb-4">
                     <h4>Welcome {{$adminDetails->name}}!</h4>
-                    <small>Here is Admin Panel Shop Management. <a href="javascript:void(0)">Go TO Shop</a></small>
+                    <small>Here is Admin Panel Shop Management. <a href="{{route('home')}}">Go TO Shop</a></small>
                 </div>                        
             </div>
         </div>

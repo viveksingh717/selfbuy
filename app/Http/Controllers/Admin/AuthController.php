@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Services\AuthService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -106,6 +110,72 @@ class AuthController extends Controller
 
     public function term_condition() {
         return view('admin.layouts.terms_condition');
+    }
+
+    public function forget_password() {
+        return view('admin.auth.forget_form');
+    }
+
+    /**
+     * Admins and customers share the same users table (role_type distinguishes
+     * them) and the same password_reset_tokens table, so this reuses Laravel's
+     * own password broker rather than a bespoke mechanism — see
+     * User::sendPasswordResetNotification(), which branches on role_type to
+     * point the emailed link at this admin flow instead of the storefront one.
+     */
+    public function sendResetLink(Request $request) {
+        $request->validate([
+            'email' => 'required|email:rfc,filter|max:255',
+        ]);
+
+        $email = $request->email;
+
+        // Only ever actually send a link if this email belongs to an admin
+        // account — the response message is identical either way, so this
+        // can't be used to enumerate which emails exist or which are admins.
+        $isAdmin = User::where('email', $email)->where('role_type', 1)->exists();
+
+        if ($isAdmin) {
+            $status = Password::sendResetLink(['email' => $email]);
+            Log::info('Admin password reset: link requested', ['email' => $email, 'status' => $status]);
+        } else {
+            Log::info('Admin password reset: link requested for non-admin or unknown email', ['email' => $email]);
+        }
+
+        return redirect()->back()->with('success', 'Password reset link has been sent.');
+    }
+
+    public function showResetForm(Request $request, string $token) {
+        return view('admin.auth.reset_password', [
+            'token' => $token,
+            'email' => $request->query('email'),
+        ]);
+    }
+
+    public function reset_password(Request $request) {
+        $request->validate([
+            'token'    => 'required',
+            'email'    => 'required|email:rfc,filter',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+                $user->sendPasswordChangedNotification();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            Log::warning('Admin password reset: failed', ['email' => $request->email, 'status' => $status]);
+
+            return redirect()->back()->withErrors(['email' => __($status)])->withInput($request->only('email', 'token'));
+        }
+
+        Log::info('Admin password reset: completed', ['email' => $request->email]);
+
+        return redirect()->route('admin.login')->with('success', 'Your password has been reset. Please sign in.');
     }
 
 }

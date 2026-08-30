@@ -66,7 +66,12 @@ class User extends Authenticatable
 
     public function sendPasswordResetNotification($token): void
     {
-        $url = route('password.reset', ['token' => $token, 'email' => $this->email]);
+        // Admins and storefront customers share this same users table (and
+        // this same password_reset_tokens table) — role_type is what tells
+        // this single shared method which reset flow to point the link at.
+        $url = $this->role_type == 1
+            ? route('admin.password.reset', ['token' => $token, 'email' => $this->email])
+            : route('password.reset', ['token' => $token, 'email' => $this->email]);
 
         try {
             Mail::to($this->email)->send(new PasswordResetMail($url, $this->name));
