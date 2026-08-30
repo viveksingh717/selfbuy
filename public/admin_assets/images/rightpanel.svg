@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1080" width="100%" height="100%">
+  <defs>
+    <linearGradient id="rightBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="70%" stop-color="#F2F7FF" />
+      <stop offset="100%" stop-color="#E1ECFE" />
+    </linearGradient>
+
+    <linearGradient id="trolleyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+
+    <linearGradient id="bagBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Light Gradient Background -->
+  <rect width="960" height="1080" fill="url(#rightBg)" />
+
+  <!-- Abstract Soft Background Circles -->
+  <circle cx="850" cy="100" r="400" fill="#E8F1FF" opacity="0.7"/>
+  <circle cx="700" cy="700" r="350" fill="#DDEBFF" opacity="0.5"/>
+  <path d="M 0 900 Q 480 800 960 950 L 960 1080 L 0 1080 Z" fill="#D5E5FF" opacity="0.6"/>
+
+  <!-- Mobile Store Frame (Background Element) -->
+  <g transform="translate(620, 350)">
+    <rect x="0" y="0" width="260" height="480" rx="30" fill="#FFFFFF" stroke="#93C5FD" stroke-width="6"/>
+    <!-- Canopy/Awning -->
+    <path d="M -10 20 L 270 20 L 250 70 L -10 70 Z" fill="#BFDBFE"/>
+    <path d="M -10 20 Q 15 70 40 20 Q 65 70 90 20 Q 115 70 140 20 Q 165 70 190 20 Q 215 70 240 20 Q 265 70 270 20" fill="#60A5FA"/>
+    <!-- Cart Icon inside Screen -->
+    <path d="M 100 150 L 160 150 L 150 200 L 110 200 Z" stroke="#93C5FD" stroke-width="4" fill="none"/>
+  </g>
+
+  <!-- Leaves / Plant Decor (Behind Trolley) -->
+  <g fill="#BFDBFE" opacity="0.7" transform="translate(500, 600)">
+    <path d="M 0 0 C -30 -50 -80 -40 -100 -100 C -40 -80 -20 -30 0 0 Z"/>
+    <path d="M 20 10 C 50 -40 100 -30 130 -80 C 70 -70 30 -20 20 10 Z"/>
+  </g>
+
+  <!-- Shopping Bags (Inside & Beside Cart) -->
+  <g transform="translate(580, 520)">
+    <!-- Light Blue Bag -->
+    <rect x="-40" y="20" width="70" height="100" rx="5" fill="#93C5FD" />
+    <path d="M -25 20 C -25 -5 5 -5 5 20" stroke="#60A5FA" stroke-width="4" fill="none"/>
+    
+    <!-- Dark Blue Bag -->
+    <rect x="0" y="40" width="80" height="110" rx="5" fill="url(#bagBlue)" />
+    <path d="M 20 40 C 20 10 60 10 60 40" stroke="#93C5FD" stroke-width="4" fill="none"/>
+  </g>
+
+  <!-- Shopping Cart (Foreground) -->
+  <g transform="translate(530, 550)">
+    <!-- Cart Mesh Wireframe -->
+    <path d="M 0 40 L 160 40 L 130 140 L 20 140 Z" fill="none" stroke="url(#trolleyGrad)" stroke-width="6" stroke-linejoin="round"/>
+    <line x1="30" y1="40" x2="20" y2="140" stroke="url(#trolleyGrad)" stroke-width="3"/>
+    <line x1="70" y1="40" x2="60" y2="140" stroke="url(#trolleyGrad)" stroke-width="3"/>
+    <line x1="110" y1="40" x2="100" y2="140" stroke="url(#trolleyGrad)" stroke-width="3"/>
+    <line x1="10" y1="75" x2="145" y2="75" stroke="url(#trolleyGrad)" stroke-width="3"/>
+    <line x1="20" y1="110" x2="135" y2="110" stroke="url(#trolleyGrad)" stroke-width="3"/>
+
+    <!-- Handle & Chassis Base -->
+    <path d="M 160 40 L 200 20" stroke="#1D4ED8" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 20 140 L 10 180 L 140 180" stroke="#1D4ED8" stroke-width="6" fill="none" stroke-linejoin="round"/>
+
+    <!-- Wheels -->
+    <circle cx="30" cy="195" r="14" fill="#1E3A8A"/>
+    <circle cx="30" cy="195" r="6" fill="#FFFFFF"/>
+    <circle cx="120" cy="195" r="14" fill="#1E3A8A"/>
+    <circle cx="120" cy="195" r="6" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Delivery Boxes Stack -->
+  <g transform="translate(730, 650)">
+    <!-- Big Box -->
+    <rect x="0" y="40" width="100" height="80" rx="4" fill="#BFDBFE" stroke="#60A5FA" stroke-width="2"/>
+    <line x1="0" y1="70" x2="100" y2="70" stroke="#93C5FD" stroke-width="2"/>
+    <!-- Small Box Top -->
+    <rect x="-30" y="110" width="80" height="70" rx="4" fill="#60A5FA" />
+    <!-- Small Box Side -->
+    <rect x="50" y="125" width="60" height="55" rx="4" fill="#93C5FD" />
+  </g>
+
+  <!-- Location Pin Icon floating -->
+  <g transform="translate(500, 520)">
+    <path d="M 0 -20 C -12 -20 -20 -12 -20 0 C -20 15 0 35 0 35 C 0 35 20 15 20 0 C 20 -12 12 -20 0 -20 Z" fill="#3B82F6"/>
+    <circle cx="0" cy="-3" r="7" fill="#FFFFFF"/>
+  </g>
+</svg>

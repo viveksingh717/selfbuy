@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1080" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="leftBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#031A4A" />
+      <stop offset="50%" stop-color="#021338" />
+      <stop offset="100%" stop-color="#010B24" />
+    </linearGradient>
+    
+    <!-- Wave Overlay Gradient -->
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0066FF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00B2FF" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Blue Base Background -->
+  <rect width="960" height="1080" fill="url(#leftBg)" />
+
+  <!-- Bottom Decorative Waves -->
+  <path d="M 0 750 Q 480 650 960 850 L 960 1080 L 0 1080 Z" fill="url(#waveGrad)" />
+  <path d="M 0 850 Q 480 950 960 780 L 960 1080 L 0 1080 Z" fill="#021B54" opacity="0.6" />
+  <path d="M 0 920 Q 480 820 960 980 L 960 1080 L 0 1080 Z" fill="#042978" opacity="0.4" />
+
+  <!-- Dotted World Map Graphic Placeholder/Styling -->
+  <g opacity="0.25" fill="#4B90FF">
+    <!-- Stylized Dotted Grid Area for World Map -->
+    <pattern id="dotGrid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.5" fill="#4B90FF" />
+    </pattern>
+    <rect x="50" y="80" width="860" height="380" fill="url(#dotGrid)" clip-path="polygon(0 0, 100% 0, 100% 100%, 0 100%)" />
+  </g>
+
+  <!-- Network Connecting Lines -->
+  <path d="M 0 600 Q 180 520 180 380 Q 180 250 50 150" stroke="#0066FF" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 180 540 Q 300 500 290 660" stroke="#0066FF" stroke-width="2" fill="none" opacity="0.6"/>
+
+  <!-- Icon Node 1: Cart -->
+  <g transform="translate(180, 380)">
+    <circle cx="0" cy="0" r="45" fill="#031A4A" stroke="#2B7FFF" stroke-width="3" />
+    <path d="M-15 -10 L-8 -10 L-2 10 L15 10 L20 -2 L-5 -2" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="0" cy="16" r="3" fill="#FFFFFF"/>
+    <circle cx="12" cy="16" r="3" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Icon Node 2: Credit Card -->
+  <g transform="translate(180, 540)">
+    <circle cx="0" cy="0" r="45" fill="#031A4A" stroke="#2B7FFF" stroke-width="3" />
+    <rect x="-18" y="-12" width="36" height="24" rx="4" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
+    <line x1="-18" y1="-4" x2="18" y2="-4" stroke="#FFFFFF" stroke-width="2.5"/>
+    <rect x="-12" y="4" width="8" height="4" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Icon Node 3: Delivery Truck -->
+  <g transform="translate(290, 660)">
+    <circle cx="0" cy="0" r="45" fill="#031A4A" stroke="#2B7FFF" stroke-width="3" />
+    <path d="M-18 -8 L2 -8 L2 8 L-18 8 Z M2 0 L10 0 L16 8 L16 8 L2 8" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+    <circle cx="-10" cy="11" r="3" fill="#FFFFFF"/>
+    <circle cx="10" cy="11" r="3" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Glowing Connection Dots -->
+  <circle cx="180" cy="380" r="3" fill="#00E5FF"/>
+  <circle cx="180" cy="540" r="3" fill="#00E5FF"/>
+  <circle cx="370" cy="405" r="4" fill="#00E5FF"/>
+</svg>

@@ -27,7 +27,7 @@
 <body class="font-montserrat">
 
     <div class="auth">
-        <div class="auth_left">
+        <div class="auth_left" style="background-image: url('{{ asset('admin_assets/images/leftpanel.svg') }}'); background-size: cover; background-position: 25% center;">
             <div class="card">
                 <div class="text-center mb-2">
                     <a class="header-brand" href="{{ route('admin.login') }}"> <img src="{{ asset('selfbuy1.png') }}"
@@ -69,11 +69,14 @@
                     </form>
                 </div>
                 <div class="text-center text-muted">
-                    Don't have account yet? <a href="{{ route('admin.register') }}">Sign up</a>
+                    Don't have account yet? <a href="{{ route('admin.register') }}">Register Here!</a>
                 </div>
             </div>
         </div>
-        <div class="auth_right full_img" id="login_right_div"></div>
+        <div class="auth_right full_img" id="login_right_div" style="background-image: url('{{ asset('admin_assets/images/rightpanel.svg') }}'); background-size: cover; background-position: 75% center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8%; box-sizing: border-box;">
+            <h2 style="color: #1D4ED8; font-weight: 700; font-size: 2rem; margin-bottom: 10px;">Welcome to SelfBuy Admin</h2>
+            <p style="color: #3B5B94; font-size: 1.1rem; max-width: 380px; text-align: center; padding: 0 20px;">Manage products, orders and customers — all in one place.</p>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

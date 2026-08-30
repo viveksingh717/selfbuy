@@ -27,7 +27,7 @@
 <body class="font-montserrat">
 
     <div class="auth">
-        <div class="auth_left">
+        <div class="auth_left" style="background-image: url('{{ asset('admin_assets/images/leftpanel.svg') }}'); background-size: cover; background-position: 25% center;">
             <div class="card">
                 <div class="text-center mb-2">
                     <a class="header-brand" href="{{ route('admin.register') }}"><img src="{{ asset('selfbuy1.png') }}"
@@ -57,8 +57,7 @@
                             @endif
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Password<a href="javascript:void(0)" class="float-right small">I
-                                    forgot password</a></label>
+                            <label class="form-label">Password</label>
                             <input type="password" class="form-control" name="password" id="password"
                                 placeholder="Password" value="{{ old('password') }}">
                             @if ($errors->has('password'))
@@ -86,11 +85,14 @@
                     </form>
                 </div>
                 <div class="text-center text-muted">
-                    Already have account? <a href="{{ route('admin.login') }}">Sign in</a>
+                    Already have account? <a href="{{ route('admin.login') }}">Login Here!</a>
                 </div>
             </div>
         </div>
-        <div class="auth_right full_img" id="login_right_div"></div>
+        <div class="auth_right full_img" id="login_right_div" style="background-image: url('{{ asset('admin_assets/images/rightpanel.svg') }}'); background-size: cover; background-position: 75% center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 8%; box-sizing: border-box;">
+            <h2 style="color: #1D4ED8; font-weight: 700; font-size: 2rem; margin-bottom: 10px;">Join SelfBuy Admin</h2>
+            <p style="color: #3B5B94; font-size: 1.1rem; max-width: 380px; text-align: center; padding: 0 20px;">Create your account to start managing the store.</p>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
