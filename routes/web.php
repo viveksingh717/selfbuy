@@ -1,16 +1,18 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PageSettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
+use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TaxController;
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -19,13 +21,13 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\ReviewVoteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Payments\InstamojoController;
 use App\Http\Controllers\Payments\PayPalController;
 use App\Http\Controllers\Payments\RazorpayController;
 use App\Http\Controllers\Payments\StripeController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewVoteController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Auth;
@@ -255,7 +257,18 @@ Route::prefix('admin')->group(function () {
         Route::delete('/delete_product_attribute/{id}', [ProductController::class, 'delete_product_attribute'])->name('admin.delete_product_attribute');
         Route::get('/get_subcategories/{category_id}', [ProductController::class, 'get_subcategories'])->name('admin.get_subcategories');
 
+        // Pages Routes (Protected by adminAuth middleware)
+        // One list for every static storefront page; pages are seeded, so there
+        // is no "create" - admins only edit content, toggle status or soft delete.
+        Route::get('/pages', [PageSettingController::class, 'index'])->name('admin.pages');
+        Route::get('/edit_page/{id}', [PageSettingController::class, 'edit_page'])->name('admin.edit_page');
+        Route::post('/update_page/{id}', [PageSettingController::class, 'update_page'])->name('admin.update_page');
+        Route::delete('/delete_page/{id}', [PageSettingController::class, 'delete_page'])->name('admin.delete_page');
+        Route::post('/page_status/{id}', [PageSettingController::class, 'toggle_status'])->name('admin.page_status');
 
+        // Sysem Settings Routes (Protected by adminAuth middleware)
+        Route::get('/settings', [SystemSettingController::class, 'settings'])->name('admin.settings');
+        Route::post('/update_settings', [SystemSettingController::class, 'update_settings'])->name('admin.update_settings');
     });
 });
 

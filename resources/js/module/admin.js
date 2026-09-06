@@ -1784,5 +1784,104 @@ $(function () {
         });
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Pages Module (one common edit form for every static storefront page)
+    |--------------------------------------------------------------------------
+    */
+    if ($('#pageForm').length) {
+
+        // ── Summernote on every rich-text field ───────────────────
+        $('#pageForm .summernote').each(function () {
+            $(this).summernote({
+                height: 220,
+                placeholder: 'Write here...',
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link']],
+                    ['view', ['codeview']],
+                ],
+            });
+        });
+
+        // ── Slug auto-fill from the page name ────────────────────
+        function slugify(value) {
+            return (value || '')
+                .toString()
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        let slugTouched = $('#slug').val().length > 0;
+
+        $('#slug').on('input', function () {
+            slugTouched = true;
+        });
+
+        $('#name').on('input', function () {
+            if (slugTouched) return;
+            $('#slug').val(slugify(this.value));
+        });
+
+        // ── Submit ──────────────────────────────────────────────
+        $('#pageForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const button = form.find('button[type="submit"]');
+
+            // push Summernote HTML back into the underlying textareas
+            form.find('.summernote').each(function () {
+                if ($(this).next('.note-editor').length) {
+                    $(this).val($(this).summernote('code'));
+                }
+            });
+
+            button.prop('disabled', true).text('Processing...');
+
+            $.ajax({
+                url: '/admin/update_page/' + form.find('[name="id"]').val(),
+                method: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function (response) {
+                    button.prop('disabled', false).text('Update');
+                    if (response.success === true) {
+                        window.location.href = '/admin/pages';
+                    } else {
+                        showGlobalError(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    button.prop('disabled', false).text('Update');
+
+                    const res = xhr.responseJSON;
+                    let firstField = null;
+
+                    if (xhr.status === 422 && res && res.validation) {
+                        $.each(res.validation, function (field, message) {
+                            showError(field, message, false, false);
+                            if (!firstField) firstField = field;
+                        });
+                        if (firstField) {
+                            showError(firstField, res.validation[firstField], true, true);
+                        }
+                    } else if (res && res.message) {
+                        showGlobalError(res.message);
+                    } else {
+                        showGlobalError('Something went wrong. Please try again later.');
+                    }
+                },
+            });
+        });
+    }
+
 
 });

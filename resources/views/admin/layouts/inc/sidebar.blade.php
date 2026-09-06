@@ -226,9 +226,15 @@
                 </a>
             </li>
 
+            <li class="{{ Request::is('admin/pages') || Request::is('admin/edit_page/*') ? 'active' : '' }}">
+                <a href="{{ route('admin.pages') }}">
+                    <i class="fa fa-files-o"></i><span>Pages</span>
+                </a>
+            </li>
+
             <li class="{{ Request::is('admin/setting') ? 'active' : '' }}">
-                <a href="#">
-                    <i class="fa fa-cog"></i><span>Setting</span>
+                <a href="{{ route('admin.settings') }}">
+                    <i class="fa fa-cog"></i><span>System Setting</span>
                 </a>
             </li>
 
