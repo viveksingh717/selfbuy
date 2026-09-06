@@ -232,7 +232,7 @@
                 </a>
             </li>
 
-            <li class="{{ Request::is('admin/setting') ? 'active' : '' }}">
+            <li class="{{ Request::is('admin/settings') ? 'active' : '' }}">
                 <a href="{{ route('admin.settings') }}">
                     <i class="fa fa-cog"></i><span>System Setting</span>
                 </a>
