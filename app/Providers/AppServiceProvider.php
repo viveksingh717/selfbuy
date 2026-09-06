@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AdminNotification;
+use App\Models\ContactUs;
+use App\Models\Order;
 use App\Services\CartService;
 use App\Services\WishlistService;
 use Illuminate\Auth\Events\Attempting;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
@@ -70,6 +74,34 @@ class AppServiceProvider extends ServiceProvider
         // to fetch and pass this down — same rationale as the header composer above.
         View::composer(['shop.partials.product_grid', 'shop.product_details'], function ($view) {
             $view->with('wishlistedProductIds', app(WishlistService::class)->getWishlistedProductIds());
+        });
+
+        // ── Admin header: notification + contact-message badges/dropdowns ──
+        View::composer('admin.layouts.inc.header', function ($view) {
+            if (!Auth::guard('admin')->check()) {
+                return;
+            }
+
+            $view->with([
+                'headerNotifications'  => AdminNotification::latestFirst()->limit(8)->get(),
+                'headerNotifUnread'    => AdminNotification::unread()->count(),
+                'headerContactUnread'  => ContactUs::where('status', 'unread')->count(),
+                'headerContactRecent'  => ContactUs::where('status', 'unread')->latest()->limit(6)->get(),
+            ]);
+        });
+
+        // A new storefront order raises an admin notification (no controller
+        // changes needed - the model event covers every code path that creates one).
+        Order::created(function (Order $order) {
+            AdminNotification::record([
+                'type'  => 'order',
+                'title' => 'New order ' . $order->order_number,
+                'body'  => trim(($order->first_name ?? '') . ' ' . ($order->last_name ?? '')) . ' · '
+                    . setting('currency_symbol', '₹') . number_format((float) $order->total, 2),
+                'url'   => route('admin.dashboard'),
+                'icon'  => 'fa-shopping-cart',
+                'data'  => ['order_id' => $order->id, 'order_number' => $order->order_number],
+            ]);
         });
     }
 }

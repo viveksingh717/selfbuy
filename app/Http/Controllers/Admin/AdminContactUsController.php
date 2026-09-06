@@ -242,4 +242,10 @@ class AdminContactUsController extends Controller
 
         return $rs->setSuccessResponse('Message deleted.', ['id' => $id]);
     }
+
+    /** Static help / usage guide for the admin panel. */
+    public function help()
+    {
+        return view('admin.pages.help');
+    }
 }

@@ -2,12 +2,15 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminContactUsController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\PageSettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
@@ -22,6 +25,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Payments\InstamojoController;
 use App\Http\Controllers\Payments\PayPalController;
@@ -59,6 +63,7 @@ Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit')->middleware('throttle:6,1');
 
 Route::get('/payment', [HomeController::class, 'payment'])->name('payment');
 
@@ -180,6 +185,15 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.logout');
 
+        // Global admin search (header search box)
+        Route::get('/search', [SearchController::class, 'index'])->name('admin.search');
+
+        // Admin profile
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');
+        Route::post('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
+        Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('admin.profile.password');
+        Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('admin.profile.avatar.delete');
+
         // Category Routes (Protected by adminAuth middleware)
         Route::get('/category', [CategoryController::class, 'index'])->name('admin.category');
         Route::get('/create_category', [CategoryController::class, 'create_category'])->name('admin.create_category');
@@ -278,6 +292,16 @@ Route::prefix('admin')->group(function () {
         Route::post('/contact_us/{id}/status', [AdminContactUsController::class, 'toggle_status'])->name('admin.contact_us.status');
         Route::post('/contact_us/{id}/star', [AdminContactUsController::class, 'toggle_star'])->name('admin.contact_us.star');
         Route::delete('/contact_us/{id}', [AdminContactUsController::class, 'destroy'])->name('admin.contact_us.delete');
+
+        // Help page for Contact Us (Protected by adminAuth middleware)
+        Route::get('/help', [AdminContactUsController::class, 'help'])->name('admin.help');
+
+        // Admin Notifications (header bell + full history)
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('admin.notifications');
+        Route::get('/notifications/poll', [AdminNotificationController::class, 'poll'])->name('admin.notifications.poll');
+        Route::get('/notifications/{id}/open', [AdminNotificationController::class, 'open'])->name('admin.notifications.open');
+        Route::post('/notifications/{id}/read', [AdminNotificationController::class, 'markRead'])->name('admin.notifications.read');
+        Route::post('/notifications/read-all', [AdminNotificationController::class, 'markAllRead'])->name('admin.notifications.read_all');
     });
 });
 

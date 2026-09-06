@@ -64,6 +64,30 @@ class User extends Authenticatable
         ];
     }
 
+    /** Full URL of the uploaded profile photo, or null. */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->profile_photo
+            ? asset('storage/users/' . $this->profile_photo)
+            : null;
+    }
+
+    /** Up to two initials for a letter-avatar fallback. */
+    public function getInitialsAttribute(): string
+    {
+        $parts = preg_split('/\s+/', trim((string) $this->name)) ?: [];
+        $parts = array_filter($parts);
+
+        if (empty($parts)) {
+            return 'A';
+        }
+
+        $first = mb_substr(array_shift($parts), 0, 1);
+        $last  = $parts ? mb_substr(end($parts), 0, 1) : '';
+
+        return mb_strtoupper($first . $last);
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         // Admins and storefront customers share this same users table (and

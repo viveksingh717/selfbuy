@@ -221,7 +221,7 @@
             <li class="g_heading">App</li>
 
             <li class="{{ Request::is('admin/profile') ? 'active' : '' }}">
-                <a href="#">
+                <a href="{{ route('admin.profile') }}">
                     <i class="fa fa-user-circle"></i><span>Profile</span>
                 </a>
             </li>
@@ -255,7 +255,7 @@
             </li>
 
             <li class="{{ Request::is('admin/help') ? 'active' : '' }}">
-                <a href="#">
+                <a href="{{ route('admin.help') }}">
                     <i class="fa fa-question-circle"></i><span>Need Help?</span>
                 </a>
             </li>

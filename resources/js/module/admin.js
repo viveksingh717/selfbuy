@@ -2074,5 +2074,56 @@ $(function () {
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Notifications (header bell + message badge)
+    |--------------------------------------------------------------------------
+    */
+    (function () {
+        const $notifBadge   = $('.js-notif-badge');
+        const $contactBadge = $('.js-contact-badge');
+
+        if (!$notifBadge.length && !$contactBadge.length) return;
+
+        const csrf = $('meta[name="csrf-token"]').attr('content');
+
+        function paint($badge, count) {
+            if (!$badge.length) return;
+            $badge.text(count > 99 ? '99+' : count);
+            $badge.toggle(count > 0);
+        }
+
+        function poll() {
+            $.getJSON('/admin/notifications/poll')
+                .done(function (res) {
+                    paint($notifBadge, res.notif_unread || 0);
+                    paint($contactBadge, res.contact_unread || 0);
+                })
+                .fail(function () { /* stay quiet on transient errors */ });
+        }
+
+        // "Mark all as read" (header dropdown + notifications page)
+        $(document).on('click', '.js-notif-readall', function (e) {
+            e.preventDefault();
+            $.ajax({
+                url: '/admin/notifications/read-all',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf },
+                success: function () {
+                    paint($notifBadge, 0);
+                    $('.feeds_widget .bg-light').removeClass('bg-light');
+                    $('.notif-row.is-unread').removeClass('is-unread');
+                    if (typeof toastr !== 'undefined') toastr.success('All notifications marked as read.');
+                },
+                error: function () {
+                    if (typeof toastr !== 'undefined') toastr.error('Could not update notifications.');
+                },
+            });
+        });
+
+        poll();
+        setInterval(poll, 60000);
+    })();
+
 
 });

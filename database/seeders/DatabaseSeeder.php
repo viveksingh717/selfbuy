@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PageSettingSeeder::class);
         $this->call(SystemSettingSeeder::class);
         $this->call(ContactUsSeeder::class);
+        $this->call(AdminNotificationSeeder::class);
 
         // Demo data
         $this->call(CategoryDemoSeeder::class);
