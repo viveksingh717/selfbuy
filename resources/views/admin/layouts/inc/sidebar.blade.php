@@ -248,15 +248,15 @@
                 Support
             </li>
 
-            <li class="{{ Request::is('admin/help') ? 'active' : '' }}">
-                <a href="#">
-                    <i class="fa fa-question-circle"></i><span>Need Help?</span>
+            <li class="{{ Request::is('admin/contact_us') ? 'active' : '' }}">
+                <a href="{{ route('admin.contact_us') }}">
+                    <i class="fa fa-envelope"></i><span>Contact Us</span>
                 </a>
             </li>
 
-            <li class="{{ Request::is('admin/contact_us') ? 'active' : '' }}">
+            <li class="{{ Request::is('admin/help') ? 'active' : '' }}">
                 <a href="#">
-                    <i class="fa fa-envelope"></i><span>Contact Us</span>
+                    <i class="fa fa-question-circle"></i><span>Need Help?</span>
                 </a>
             </li>
 

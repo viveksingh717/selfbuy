@@ -1883,5 +1883,196 @@ $(function () {
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Us Module (storefront contact messages)
+    |--------------------------------------------------------------------------
+    */
+    if ($('#contactTable').length) {
+
+        const csrf = $('meta[name="csrf-token"]').attr('content');
+        let contactStatusFilter = '';
+
+        const contactTable = $('#contactTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/admin/contact_us',
+                data: function (d) { d.status = contactStatusFilter; },
+            },
+            columns: [
+                { data: 'star',       name: 'is_starred', orderable: false, searchable: false },
+                { data: 'avatar',     name: 'avatar',     orderable: false, searchable: false },
+                { data: 'sender',     name: 'name' },
+                { data: 'email',      name: 'email' },
+                { data: 'preview',    name: 'message' },
+                { data: 'status',     name: 'status' },
+                { data: 'created_at', name: 'created_at' },
+                { data: 'action',     name: 'action', orderable: false, searchable: false },
+            ],
+            order: [[6, 'desc']],
+            pageLength: 25,
+            lengthChange: false,
+        });
+
+        // ── Status filter pills ──────────────────────────────────
+        $('.contact-filter a').on('click', function () {
+            $('.contact-filter a').removeClass('active');
+            $(this).addClass('active');
+            contactStatusFilter = $(this).data('status') || '';
+            contactTable.ajax.reload();
+        });
+
+        // ── Star toggle ─────────────────────────────────────────
+        $('#contactTable').on('click', '.contact-star', function () {
+            const id = $(this).data('id');
+            $.ajax({
+                url: '/admin/contact_us/' + id + '/star',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf },
+                success: function () { contactTable.ajax.reload(null, false); },
+                error: function () {
+                    if (typeof toastr !== 'undefined') toastr.error('Could not update.');
+                },
+            });
+        });
+
+        // ── Status change (table rows + modal buttons) ──────────
+        $(document).on('click', '.contact-status', function () {
+            const id = $(this).data('id') || $('#cm_id').val();
+            const status = $(this).data('status');
+            if (!id || !status) return;
+
+            $.ajax({
+                url: '/admin/contact_us/' + id + '/status',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf },
+                data: { status: status },
+                success: function (res) {
+                    if (typeof toastr !== 'undefined') toastr.success(res.message || 'Updated.');
+                    $('#contactModal').modal('hide');
+                    contactTable.ajax.reload(null, false);
+                },
+                error: function () {
+                    if (typeof toastr !== 'undefined') toastr.error('Could not update status.');
+                },
+            });
+        });
+
+        // ── Delete ─────────────────────────────────────────────
+        $('#contactTable').on('click', '.contact-delete', function () {
+            const id = $(this).data('id');
+
+            Swal.fire({
+                title: 'Delete this message?',
+                text: 'It will be moved to trash (soft delete).',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    url: '/admin/contact_us/' + id,
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    success: function (res) {
+                        Swal.fire({ icon: 'success', title: 'Deleted!', text: res.message, timer: 1400, showConfirmButton: false });
+                        contactTable.ajax.reload(null, false);
+                    },
+                    error: function (xhr) {
+                        Swal.fire({ icon: 'error', title: 'Error!', text: (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong' });
+                    },
+                });
+            });
+        });
+
+        // ── View / Reply modal ─────────────────────────────────
+        $('#contactTable').on('click', '.contact-view', function () {
+            const id = $(this).data('id');
+
+            $.ajax({
+                url: '/admin/contact_us/' + id,
+                method: 'GET',
+                headers: { 'X-CSRF-TOKEN': csrf },
+                success: function (res) {
+                    const d = res.data || {};
+
+                    $('#cm_id').val(d.id);
+                    $('#cm_name').text(d.name || '—');
+                    $('#cm_avatar').text(d.initial || '?').css('background', d.avatar_color || '#5A67D8');
+                    $('#cm_email').text(d.email || '').attr('href', 'mailto:' + (d.email || ''));
+                    $('#cm_phone').text(d.phone || '—');
+                    $('#cm_received').text(d.created_at || '—');
+                    $('#cm_status').text((d.status || '').toUpperCase());
+                    $('#cm_subject').text(d.subject || '');
+                    $('#cm_subject_wrap').toggle(!!d.subject);
+                    $('#cm_message').text(d.message || '');
+
+                    if (d.admin_reply) {
+                        $('#cm_prev_reply').text(d.admin_reply);
+                        $('#cm_replied_meta').text(
+                            (d.replied_at ? '· ' + d.replied_at : '') + (d.replied_by ? ' · ' + d.replied_by : '')
+                        );
+                        $('#cm_prev_reply_wrap').show();
+                    } else {
+                        $('#cm_prev_reply_wrap').hide();
+                    }
+
+                    clearError('reply_message');
+                    $('#reply_message').val('');
+                    $('#contactModal').modal('show');
+
+                    // an unread message becomes "read" on open
+                    contactTable.ajax.reload(null, false);
+                },
+                error: function () {
+                    if (typeof toastr !== 'undefined') toastr.error('Could not load the message.');
+                },
+            });
+        });
+
+        // ── Send reply ─────────────────────────────────────────
+        $('#contactReplyForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const id = $('#cm_id').val();
+            const btn = $('#cm_send');
+            clearError('reply_message');
+            btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Sending...');
+
+            $.ajax({
+                url: '/admin/contact_us/' + id + '/reply',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf },
+                data: { reply_message: $('#reply_message').val() },
+                dataType: 'json',
+                success: function (res) {
+                    btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Send Reply');
+                    if (res.success) {
+                        $('#contactModal').modal('hide');
+                        if (typeof toastr !== 'undefined') toastr.success(res.message);
+                        contactTable.ajax.reload(null, false);
+                    } else {
+                        showGlobalError(res.message);
+                    }
+                },
+                error: function (xhr) {
+                    btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Send Reply');
+                    const res = xhr.responseJSON;
+                    if (xhr.status === 422 && res && res.validation) {
+                        $.each(res.validation, function (field, message) {
+                            showError(field, message, false, true);
+                        });
+                    } else if (typeof toastr !== 'undefined') {
+                        toastr.error((res && res.message) || 'Could not send the reply.');
+                    }
+                },
+            });
+        });
+    }
+
 
 });

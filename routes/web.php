@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\AdminContactUsController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -269,6 +270,14 @@ Route::prefix('admin')->group(function () {
         // Sysem Settings Routes (Protected by adminAuth middleware)
         Route::get('/settings', [SystemSettingController::class, 'settings'])->name('admin.settings');
         Route::post('/update_settings', [SystemSettingController::class, 'update_settings'])->name('admin.update_settings');
+
+        // Contact Us Routes (Protected by adminAuth middleware)
+        Route::get('/contact_us', [AdminContactUsController::class, 'index'])->name('admin.contact_us');
+        Route::get('/contact_us/{id}', [AdminContactUsController::class, 'show'])->name('admin.contact_us.show');
+        Route::post('/contact_us/{id}/reply', [AdminContactUsController::class, 'reply'])->name('admin.contact_us.reply');
+        Route::post('/contact_us/{id}/status', [AdminContactUsController::class, 'toggle_status'])->name('admin.contact_us.status');
+        Route::post('/contact_us/{id}/star', [AdminContactUsController::class, 'toggle_star'])->name('admin.contact_us.star');
+        Route::delete('/contact_us/{id}', [AdminContactUsController::class, 'destroy'])->name('admin.contact_us.delete');
     });
 });
 
