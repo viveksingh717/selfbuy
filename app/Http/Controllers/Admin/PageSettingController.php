@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PageSetting;
 use App\Services\PageSettingService;
 use App\Services\ResponseService;
 use Carbon\Carbon;
