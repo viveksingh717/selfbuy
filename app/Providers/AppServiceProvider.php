@@ -76,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
             $view->with('wishlistedProductIds', app(WishlistService::class)->getWishlistedProductIds());
         });
 
+        // "Meet Our Team" cards on the storefront About Us page.
+        View::composer('partials.about_us', function ($view) {
+            $view->with('teamMembers', \App\Models\TeamMember::active()->ordered()->get());
+        });
+
         // ── Admin header: notification + contact-message badges/dropdowns ──
         View::composer('admin.layouts.inc.header', function ($view) {
             if (!Auth::guard('admin')->check()) {

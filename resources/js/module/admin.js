@@ -2125,5 +2125,117 @@ $(function () {
         setInterval(poll, 60000);
     })();
 
+    /*
+    |--------------------------------------------------------------------------
+    | Team Members Module
+    |--------------------------------------------------------------------------
+    */
+    if ($('#teamMemberForm').length || $('#editTeamMemberForm').length) {
+        $('#teamMemberForm, #editTeamMemberForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const button = form.find('button[type="submit"]');
+            const isEdit = form.attr('id') === 'editTeamMemberForm';
+            const url = isEdit
+                ? '/admin/update_team_member/' + form.find('[name="id"]').val()
+                : '/admin/process_team_member';
+
+            button.prop('disabled', true).text('Processing...');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function (response) {
+                    button.prop('disabled', false).text(isEdit ? 'Update Member' : 'Add Member');
+                    if (response.success === true) {
+                        window.location.href = '/admin/team_members';
+                    } else {
+                        showGlobalError(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    button.prop('disabled', false).text(isEdit ? 'Update Member' : 'Add Member');
+                    const res = xhr.responseJSON;
+                    let firstField = null;
+
+                    if (xhr.status === 422 && res && res.validation) {
+                        $.each(res.validation, function (field, message) {
+                            showError(field, message, false, false);
+                            if (!firstField) firstField = field;
+                        });
+                        if (firstField) {
+                            showError(firstField, res.validation[firstField], true, true);
+                        }
+                    } else if (res && res.message) {
+                        showGlobalError(res.message);
+                    } else {
+                        showGlobalError('Something went wrong. Please try again later.');
+                    }
+                },
+            });
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gallery Module
+    |--------------------------------------------------------------------------
+    */
+    if ($('#galleryForm').length || $('#editGalleryForm').length) {
+        $('#galleryForm, #editGalleryForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const button = form.find('button[type="submit"]');
+            const isEdit = form.attr('id') === 'editGalleryForm';
+            const url = isEdit
+                ? '/admin/update_gallery/' + form.find('[name="id"]').val()
+                : '/admin/process_gallery';
+
+            button.prop('disabled', true).text('Processing...');
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function (response) {
+                    button.prop('disabled', false).text(isEdit ? 'Update Image' : 'Add Image');
+                    if (response.success === true) {
+                        window.location.href = '/admin/gallery';
+                    } else {
+                        showGlobalError(response.message);
+                    }
+                },
+                error: function (xhr) {
+                    button.prop('disabled', false).text(isEdit ? 'Update Image' : 'Add Image');
+                    const res = xhr.responseJSON;
+                    let firstField = null;
+
+                    if (xhr.status === 422 && res && res.validation) {
+                        $.each(res.validation, function (field, message) {
+                            showError(field, message, false, false);
+                            if (!firstField) firstField = field;
+                        });
+                        if (firstField) {
+                            showError(firstField, res.validation[firstField], true, true);
+                        }
+                    } else if (res && res.message) {
+                        showGlobalError(res.message);
+                    } else {
+                        showGlobalError('Something went wrong. Please try again later.');
+                    }
+                },
+            });
+        });
+    }
+
 
 });

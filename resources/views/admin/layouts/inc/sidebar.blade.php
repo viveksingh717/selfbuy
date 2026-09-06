@@ -232,6 +232,18 @@
                 </a>
             </li>
 
+            <li class="{{ Request::is('admin/team_members') || Request::is('admin/create_team_member') || Request::is('admin/edit_team_member/*') ? 'active' : '' }}">
+                <a href="{{ route('admin.team_members') }}">
+                    <i class="fa fa-users"></i><span>Team Members</span>
+                </a>
+            </li>
+
+            <li class="{{ Request::is('admin/gallery') || Request::is('admin/create_gallery') || Request::is('admin/edit_gallery/*') ? 'active' : '' }}">
+                <a href="{{ route('admin.gallery') }}">
+                    <i class="fa fa-picture-o"></i><span>Gallery</span>
+                </a>
+            </li>
+
             <li class="{{ Request::is('admin/settings') ? 'active' : '' }}">
                 <a href="{{ route('admin.settings') }}">
                     <i class="fa fa-cog"></i><span>System Setting</span>

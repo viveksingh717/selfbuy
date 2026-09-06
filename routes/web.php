@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PageSettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SizeController;
@@ -187,6 +189,24 @@ Route::prefix('admin')->group(function () {
 
         // Global admin search (header search box)
         Route::get('/search', [SearchController::class, 'index'])->name('admin.search');
+
+        // Team Members (About Us page)
+        Route::get('/team_members', [TeamMemberController::class, 'index'])->name('admin.team_members');
+        Route::get('/create_team_member', [TeamMemberController::class, 'create_member'])->name('admin.create_team_member');
+        Route::post('/process_team_member', [TeamMemberController::class, 'process_member'])->name('admin.process_team_member');
+        Route::get('/edit_team_member/{id}', [TeamMemberController::class, 'edit_member'])->name('admin.edit_team_member');
+        Route::post('/update_team_member/{id}', [TeamMemberController::class, 'update_member'])->name('admin.update_team_member');
+        Route::delete('/delete_team_member/{id}', [TeamMemberController::class, 'delete_member'])->name('admin.delete_team_member');
+        Route::post('/team_member_status/{id}', [TeamMemberController::class, 'toggle_status'])->name('admin.team_member_status');
+
+        // Gallery
+        Route::get('/gallery', [GalleryController::class, 'index'])->name('admin.gallery');
+        Route::get('/create_gallery', [GalleryController::class, 'create_gallery'])->name('admin.create_gallery');
+        Route::post('/process_gallery', [GalleryController::class, 'process_gallery'])->name('admin.process_gallery');
+        Route::get('/edit_gallery/{id}', [GalleryController::class, 'edit_gallery'])->name('admin.edit_gallery');
+        Route::post('/update_gallery/{id}', [GalleryController::class, 'update_gallery'])->name('admin.update_gallery');
+        Route::delete('/delete_gallery/{id}', [GalleryController::class, 'delete_gallery'])->name('admin.delete_gallery');
+        Route::post('/gallery_status/{id}', [GalleryController::class, 'toggle_status'])->name('admin.gallery_status');
 
         // Admin profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile');

@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
         $this->call(SystemSettingSeeder::class);
         $this->call(ContactUsSeeder::class);
         $this->call(AdminNotificationSeeder::class);
+        $this->call(TeamMemberSeeder::class);
+        $this->call(GallerySeeder::class);
 
         // Demo data
         $this->call(CategoryDemoSeeder::class);

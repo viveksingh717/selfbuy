@@ -117,72 +117,47 @@
 
                 <h2 class="title text-center mb-4">Meet Our Team</h2><!-- End .title text-center mb-2 -->
 
-                {{-- Static for now — team member cards will move to the admin panel
-                    once that management screen is built; this grid is already
-                    laid out for however many people that ends up being. --}}
+                {{-- Managed from Admin > Team Members (App\Models\TeamMember).
+                    $teamMembers is injected by a view composer in AppServiceProvider. --}}
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="member member-anim text-center">
-                            <figure class="member-media">
-                                <img src="{{ asset('assets/images/team/member-3.jpg') }}" alt="Vivek Singh">
+                    @forelse ($teamMembers ?? [] as $member)
+                        <div class="col-md-4">
+                            <div class="member member-anim text-center">
+                                <figure class="member-media">
+                                    <img src="{{ $member->photo_url }}" alt="{{ $member->name }}">
 
-                                <figcaption class="member-overlay">
-                                    <div class="member-overlay-content">
-                                        <h3 class="member-title">Vivek Singh<span>Founder & Owner</span></h3><!-- End .member-title -->
-                                        <p>Built SelfBuy from the ground up in 2026 — from the product catalog to checkout to customer support.</p>
-                                        <div class="social-icons social-icons-simple">
-                                            <a href="mailto:{{ config('mail.from.address') }}" class="social-icon" title="Email"><i class="icon-envelope"></i></a>
-                                        </div><!-- End .soial-icons -->
-                                    </div><!-- End .member-overlay-content -->
-                                </figcaption><!-- End .member-overlay -->
-                            </figure><!-- End .member-media -->
-                            <div class="member-content">
-                                <h3 class="member-title">Vivek Singh<span>Founder & Owner</span></h3><!-- End .member-title -->
-                            </div><!-- End .member-content -->
-                        </div><!-- End .member -->
-                    </div><!-- End .col-md-4 -->
-
-                    <div class="col-md-4">
-                        <div class="member member-anim text-center">
-                            <figure class="member-media">
-                                <img src="{{ asset('assets/images/team/member-1.jpg') }}" alt="Team member">
-
-                                <figcaption class="member-overlay">
-                                    <div class="member-overlay-content">
-                                        <h3 class="member-title">Team Member<span>Customer Support</span></h3><!-- End .member-title -->
-                                        <p>Here to help with orders, returns and anything else you need.</p>
-                                        <div class="social-icons social-icons-simple">
-                                            <a href="mailto:{{ config('mail.from.address') }}" class="social-icon" title="Email"><i class="icon-envelope"></i></a>
-                                        </div><!-- End .soial-icons -->
-                                    </div><!-- End .member-overlay-content -->
-                                </figcaption><!-- End .member-overlay -->
-                            </figure><!-- End .member-media -->
-                            <div class="member-content">
-                                <h3 class="member-title">Team Member<span>Customer Support</span></h3><!-- End .member-title -->
-                            </div><!-- End .member-content -->
-                        </div><!-- End .member -->
-                    </div><!-- End .col-md-4 -->
-
-                    <div class="col-md-4">
-                        <div class="member member-anim text-center">
-                            <figure class="member-media">
-                                <img src="{{ asset('assets/images/team/member-2.jpg') }}" alt="Team member">
-
-                                <figcaption class="member-overlay">
-                                    <div class="member-overlay-content">
-                                        <h3 class="member-title">Team Member<span>Operations</span></h3><!-- End .member-title -->
-                                        <p>Keeps the catalog, orders and deliveries running smoothly.</p>
-                                        <div class="social-icons social-icons-simple">
-                                            <a href="mailto:{{ config('mail.from.address') }}" class="social-icon" title="Email"><i class="icon-envelope"></i></a>
-                                        </div><!-- End .soial-icons -->
-                                    </div><!-- End .member-overlay-content -->
-                                </figcaption><!-- End .member-overlay -->
-                            </figure><!-- End .member-media -->
-                            <div class="member-content">
-                                <h3 class="member-title">Team Member<span>Operations</span></h3><!-- End .member-title -->
-                            </div><!-- End .member-content -->
-                        </div><!-- End .member -->
-                    </div><!-- End .col-md-4 -->
+                                    <figcaption class="member-overlay">
+                                        <div class="member-overlay-content">
+                                            <h3 class="member-title">{{ $member->name }}<span>{{ $member->designation }}</span></h3><!-- End .member-title -->
+                                            @if ($member->bio)<p>{{ $member->bio }}</p>@endif
+                                            <div class="social-icons social-icons-simple">
+                                                @if ($member->facebook_url)
+                                                    <a href="{{ $member->facebook_url }}" class="social-icon" title="Facebook" target="_blank" rel="noopener"><i class="icon-facebook-f"></i></a>
+                                                @endif
+                                                @if ($member->twitter_url)
+                                                    <a href="{{ $member->twitter_url }}" class="social-icon" title="Twitter" target="_blank" rel="noopener"><i class="icon-twitter"></i></a>
+                                                @endif
+                                                @if ($member->instagram_url)
+                                                    <a href="{{ $member->instagram_url }}" class="social-icon" title="Instagram" target="_blank" rel="noopener"><i class="icon-instagram"></i></a>
+                                                @endif
+                                                @if ($member->linkedin_url)
+                                                    <a href="{{ $member->linkedin_url }}" class="social-icon" title="LinkedIn" target="_blank" rel="noopener"><i class="icon-linkedin"></i></a>
+                                                @endif
+                                                @if ($member->email)
+                                                    <a href="mailto:{{ $member->email }}" class="social-icon" title="Email"><i class="icon-envelope"></i></a>
+                                                @endif
+                                            </div><!-- End .soial-icons -->
+                                        </div><!-- End .member-overlay-content -->
+                                    </figcaption><!-- End .member-overlay -->
+                                </figure><!-- End .member-media -->
+                                <div class="member-content">
+                                    <h3 class="member-title">{{ $member->name }}<span>{{ $member->designation }}</span></h3><!-- End .member-title -->
+                                </div><!-- End .member-content -->
+                            </div><!-- End .member -->
+                        </div><!-- End .col-md-4 -->
+                    @empty
+                        <div class="col-12 text-center text-muted">Our team details are coming soon.</div>
+                    @endforelse
                 </div><!-- End .row -->
             </div><!-- End .container -->
         </div><!-- End .page-content -->
