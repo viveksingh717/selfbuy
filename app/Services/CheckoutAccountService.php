@@ -22,7 +22,10 @@ class CheckoutAccountService
 
     public function maybeCreateAccount(Order $order, array $billingData): void
     {
-        if ($order->user_id || !isset($billingData['account_password_encrypted'])) {
+        $wantsAccount = isset($billingData['account_password_hash'])
+            || isset($billingData['account_password_encrypted']); // legacy, pre-hash checkouts
+
+        if ($order->user_id || !$wantsAccount) {
             return;
         }
 
@@ -32,20 +35,25 @@ class CheckoutAccountService
             return;
         }
 
-        try {
-            $password = Crypt::decryptString($billingData['account_password_encrypted']);
-        } catch (\Throwable $e) {
-            Log::error('Checkout: could not decrypt stored account password: '.$e->getMessage(), ['order_id' => $order->id]);
+        $credentials = [];
+        if (isset($billingData['account_password_hash'])) {
+            $credentials['password_hash'] = $billingData['account_password_hash'];
+        } else {
+            // Legacy checkouts (before passwords were hashed at checkout) - encrypted copy.
+            try {
+                $credentials['password'] = Crypt::decryptString($billingData['account_password_encrypted']);
+            } catch (\Throwable $e) {
+                Log::error('Checkout: could not decrypt stored account password: '.$e->getMessage(), ['order_id' => $order->id]);
 
-            return;
+                return;
+            }
         }
 
         $result = $this->authService->registerCustomer([
             'name' => trim($billingData['first_name'].' '.$billingData['last_name']),
             'email' => $billingData['email'],
             'phone_number' => $billingData['phone'],
-            'password' => $password,
-        ]);
+        ] + $credentials);
 
         if (! $result['success']) {
             Log::warning('Checkout: create-account failed', ['email' => $billingData['email'], 'message' => $result['message']]);

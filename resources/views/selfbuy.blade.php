@@ -446,7 +446,9 @@
                     class="icon-long-arrow-right"></i></a>
         </div><!-- End .more-container -->
     </div>
-    @if (home_setting('signup_offer_enabled'))
+    {{-- Welcome offer is for first-time customers: hidden when logged in, or when this browser
+         has signed in before (sb_has_account cookie, set in OtpController::verify). --}}
+    @if (home_setting('signup_offer_enabled') && !auth('web')->check() && !request()->cookie('sb_has_account'))
         <div class="cta cta-display bg-image pt-4 pb-4"
             style="background-image: url('{{ home_asset('signup_offer_background') }}');">
             <div class="container">

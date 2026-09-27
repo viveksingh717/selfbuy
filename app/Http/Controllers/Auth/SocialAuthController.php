@@ -60,6 +60,13 @@ class SocialAuthController extends Controller
             '2fa_remember' => true,
         ]);
 
+        // A brand-new Google account still goes through the 'login' OTP, so flag it for the
+        // welcome offer in OtpController::verify(). Stored as the user id so a stale flag
+        // can never apply to anyone else.
+        if ($user->wasRecentlyCreated) {
+            session()->put('2fa_new_account', $user->id);
+        }
+
         return redirect()->route('home')->with(['open_auth_modal' => 'otp', 'success' => $otpResult['message']]);
     }
 }

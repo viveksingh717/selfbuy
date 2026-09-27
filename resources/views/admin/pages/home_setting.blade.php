@@ -148,9 +148,18 @@
                                                             <small class="text-muted d-block">Leave empty to keep the current file. Max 4 MB.</small>
                                                             @break
 
+                                                        @case('number')
+                                                            <input type="number" class="form-control" name="{{ $key }}" value="{{ old($key, $value) }}"
+                                                                min="{{ $meta['min'] ?? '' }}" max="{{ $meta['max'] ?? '' }}" step="any">
+                                                            @break
+
                                                         @default
                                                             <input type="text" class="form-control" name="{{ $key }}" value="{{ old($key, $value) }}">
                                                     @endswitch
+
+                                                    @if (!empty($meta['help']))
+                                                        <small class="text-muted d-block">{{ $meta['help'] }}</small>
+                                                    @endif
 
                                                     @error($key)
                                                         <div class="text-danger mt-1">{{ $message }}</div>

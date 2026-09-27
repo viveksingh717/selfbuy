@@ -30,6 +30,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\Payments\InstamojoController;
 use App\Http\Controllers\Payments\PayPalController;
 use App\Http\Controllers\Payments\RazorpayController;
@@ -47,20 +48,20 @@ Route::get('/search', [ShopController::class, 'search'])->name('search');
 Route::get('/products', [ShopController::class, 'allProducts'])->name('products');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add');
-Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('cart.remove');
-Route::post('/cart/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
-Route::delete('/cart/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
-Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('cart.shipping');
+Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add')->middleware('throttle:cart');
+Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update')->middleware('throttle:cart');
+Route::delete('/cart/remove/{id}', [CartController::class, 'destroy'])->name('cart.remove')->middleware('throttle:cart');
+Route::post('/cart/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply')->middleware('throttle:coupon');
+Route::delete('/cart/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove')->middleware('throttle:cart');
+Route::post('/cart/shipping', [CartController::class, 'setShipping'])->name('cart.shipping')->middleware('throttle:cart');
 
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
-Route::delete('/wishlist/remove/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove');
+Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle')->middleware('throttle:cart');
+Route::delete('/wishlist/remove/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove')->middleware('throttle:cart');
 
 // Guest-accessible like cart/wishlist above — voting Helpful/Unhelpful doesn't
 // need an account, only writing a review does (see the 'auth' group below).
-Route::post('/reviews/vote', [ReviewVoteController::class, 'store'])->name('reviews.vote');
+Route::post('/reviews/vote', [ReviewVoteController::class, 'store'])->name('reviews.vote')->middleware('throttle:reviews');
 
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 
@@ -68,6 +69,8 @@ Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.submit')->middleware('throttle:6,1');
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('newsletter.subscribe')->middleware('throttle:5,1');
+Route::get('/newsletter/unsubscribe/{subscriber}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe')->middleware('signed');
 
 Route::get('/payment', [HomeController::class, 'payment'])->name('payment');
 
@@ -90,11 +93,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/myaccount/details', [AccountController::class, 'updateDetails'])->name('account.details.update');
     Route::post('/myaccount/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
     Route::post('/myaccount/address', [AccountController::class, 'updateAddress'])->name('account.address.update');
-    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store')->middleware('throttle:reviews');
 });
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:checkout');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 // Payment routes are accessible to guests and logged-in users alike (unlike
@@ -133,23 +136,24 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', fn () => redirect()->route('home')->with('open_auth_modal', 'signin'))->name('login');
     Route::get('/register', fn () => redirect()->route('home')->with('open_auth_modal', 'register'))->name('register');
 
-    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
-    Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store')->middleware('throttle:login');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register.store')->middleware('throttle:register');
 
     Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
-    Route::post('/otp/verify', [OtpController::class, 'verify'])->name('otp.verify');
-    Route::post('/otp/resend', [OtpController::class, 'resend'])->name('otp.resend');
+    Route::post('/otp/verify', [OtpController::class, 'verify'])->name('otp.verify')->middleware('throttle:otp-verify');
+    Route::post('/otp/resend', [OtpController::class, 'resend'])->name('otp.resend')->middleware('throttle:otp-resend');
 
-    Route::post('/password/email', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/password/email', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:password-reset');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update')->middleware('throttle:password-reset');
 });
 
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
 
-Route::get('/test', function () {
+// Order email template preview - shows a real customer's order, so admins only.
+Route::middleware('adminAuth')->get('/test', function () {
     $order = \App\Models\Order::with('items')->latest()->first();
 
     if (!$order) {
@@ -174,14 +178,14 @@ Route::prefix('admin')->group(function () {
     // Routes for guests (adminGuest middleware applied)
     Route::middleware(['adminGuest'])->group(function () {
         Route::get('/login', [AuthController::class, 'login'])->name('admin.login');
-        Route::post('/login_process', [AuthController::class, 'login_process'])->name('admin.login_process');
+        Route::post('/login_process', [AuthController::class, 'login_process'])->name('admin.login_process')->middleware('throttle:admin-login');
         Route::get('/register', [AuthController::class, 'register'])->name('admin.register');
-        Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process');
+        Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process')->middleware('throttle:register');
         Route::get('/terms_condition', [AuthController::class, 'term_condition'])->name('admin.terms_condition');
         Route::get('/forget_password', [AuthController::class, 'forget_password'])->name('admin.forget_password');
-        Route::post('/forget_password', [AuthController::class, 'sendResetLink'])->name('admin.password.email');
+        Route::post('/forget_password', [AuthController::class, 'sendResetLink'])->name('admin.password.email')->middleware('throttle:password-reset');
         Route::get('/reset_password/{token}', [AuthController::class, 'showResetForm'])->name('admin.password.reset');
-        Route::post('/reset_password', [AuthController::class, 'reset_password'])->name('admin.reset_password');
+        Route::post('/reset_password', [AuthController::class, 'reset_password'])->name('admin.reset_password')->middleware('throttle:password-reset');
     });
 
     // Routes for authenticated admin users (adminAuth middleware applied)

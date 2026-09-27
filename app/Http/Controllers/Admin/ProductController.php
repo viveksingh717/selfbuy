@@ -198,7 +198,7 @@ class ProductController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'product_image' => 'required|image|mimes:jpeg,jpg,png,gif,svg|max:2048'
+                'product_image' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:2048'
             ]);
 
             if ($validator->fails()) {
@@ -230,7 +230,7 @@ class ProductController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'gallery_image' => 'required|image|mimes:jpeg,jpg,png,gif,svg|max:2048'
+                'gallery_image' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:2048'
             ]);
 
             if ($validator->fails()) {

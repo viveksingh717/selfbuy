@@ -94,7 +94,7 @@
     <script src="{{ asset('assets/js/jquery.elevateZoom.min.js') }}"></script>
     <script src="{{ asset('assets/js/nouislider.min.js') }}"></script>
     <!-- Main JS File -->
-    <script src="{{ asset('assets/js/main.js') }}"></script>
+    <script src="{{ asset('assets/js/main.js') }}?v={{ filemtime(public_path('assets/js/main.js')) }}"></script>
 
     <script type="text/javascript">
         $.ajaxSetup({

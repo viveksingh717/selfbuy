@@ -112,43 +112,35 @@
                                 </div><!-- End .row -->
                             </div><!-- End .megamenu megamenu-md -->
                         </li>
-                        <li>
-                            <a href="product.html" class="sf-with-ul">Product</a>
+                        <li class="{{ request()->routeIs('products') ? 'active' : '' }}">
+                            <a href="{{ route('products') }}" class="sf-with-ul">Product</a>
 
                             <div class="megamenu megamenu-sm">
                                 <div class="row no-gutters">
-                                    <div class="col-md-6">
+                                    <div class="{{ $headerBrands->isNotEmpty() ? 'col-md-6' : 'col-md-12' }}">
                                         <div class="menu-col">
-                                            <div class="menu-title">Product Details</div>
-                                            <!-- End .menu-title -->
+                                            <div class="menu-title">Browse Products</div><!-- End .menu-title -->
                                             <ul>
-                                                <li><a href="product.html">Default</a></li>
-                                                <li><a href="product-centered.html">Centered</a></li>
-                                                <li><a href="product-extended.html"><span>Extended Info<span
-                                                                class="tip tip-new">New</span></span></a></li>
-                                                <li><a href="product-gallery.html">Gallery</a></li>
-                                                <li><a href="product-sticky.html">Sticky Info</a></li>
-                                                <li><a href="product-sidebar.html">Boxed With Sidebar</a></li>
-                                                <li><a href="product-fullwidth.html">Full Width</a></li>
-                                                <li><a href="product-masonry.html">Masonry Sticky Info</a></li>
+                                                <li><a href="{{ route('products') }}">All Products</a></li>
+                                                <li><a href="{{ route('products', ['sort' => 'latest']) }}">New Arrivals</a></li>
+                                                <li><a href="{{ route('products', ['sort' => 'price_low']) }}">Price: Low to High</a></li>
+                                                <li><a href="{{ route('products', ['sort' => 'price_high']) }}">Price: High to Low</a></li>
                                             </ul>
                                         </div><!-- End .menu-col -->
                                     </div><!-- End .col-md-6 -->
 
-                                    <div class="col-md-6">
-                                        <div class="banner banner-overlay">
-                                            <a href="category.html">
-                                                <img src="{{ asset('assets/images/menu/banner-2.jpg') }}"
-                                                    alt="Banner">
-
-                                                <div class="banner-content banner-content-bottom">
-                                                    <div class="banner-title text-white">New
-                                                        Trends<br><span><strong>spring 2019</strong></span>
-                                                    </div><!-- End .banner-title -->
-                                                </div><!-- End .banner-content -->
-                                            </a>
-                                        </div><!-- End .banner -->
-                                    </div><!-- End .col-md-6 -->
+                                    @if ($headerBrands->isNotEmpty())
+                                        <div class="col-md-6">
+                                            <div class="menu-col">
+                                                <div class="menu-title">Shop by Brand</div><!-- End .menu-title -->
+                                                <ul>
+                                                    @foreach ($headerBrands as $brand)
+                                                        <li><a href="{{ route('products', ['brand_id' => [$brand->id]]) }}">{{ $brand->brand_name }}</a></li>
+                                                    @endforeach
+                                                </ul>
+                                            </div><!-- End .menu-col -->
+                                        </div><!-- End .col-md-6 -->
+                                    @endif
                                 </div><!-- End .row -->
                             </div><!-- End .megamenu megamenu-sm -->
                         </li>

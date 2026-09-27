@@ -45,8 +45,10 @@
                 </div>
             </form>
         </div>
-        <div class="text-center text-muted">
-            Don't have account yet? <a href="{{ route('admin.register') }}">Register Here!</a>
-        </div>
+        @if (config('auth.admin_registration'))
+            <div class="text-center text-muted">
+                Don't have account yet? <a href="{{ route('admin.register') }}">Register Here!</a>
+            </div>
+        @endif
     </div>
 @endsection

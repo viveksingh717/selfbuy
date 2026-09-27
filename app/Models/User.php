@@ -137,4 +137,10 @@ class User extends Authenticatable
             Log::error('Account details changed: notification email failed: '.$e->getMessage(), ['user_id' => $this->id, 'to' => $notifyEmail]);
         }
     }
+
+    /** Personal single-use welcome coupon issued when the account was first verified. */
+    public function welcomeCoupon()
+    {
+        return $this->belongsTo(CouponModel::class, 'welcome_coupon_id');
+    }
 }

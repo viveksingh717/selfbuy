@@ -79,11 +79,21 @@ class AuthController extends Controller
     }
 
     public function register() {
+        $this->ensureRegistrationEnabled();
+
         return view('admin.auth.register');
+    }
+
+    /** Admin sign-up is closed unless ADMIN_REGISTRATION_ENABLED=true (see config/auth.php). */
+    private function ensureRegistrationEnabled(): void
+    {
+        abort_unless(config('auth.admin_registration'), 404);
     }
 
     public function register_process(Request $request)
     {
+        $this->ensureRegistrationEnabled();
+
         $request->validate([
             'name'     => 'required|string|max:100',
             'email'    => 'required|email:rfc,dns|regex:/(.+)@(.+)\.(.+)/i|max:255|unique:users,email',

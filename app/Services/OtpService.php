@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 class OtpService
 {
     private const EXPIRY_MINUTES = 10;
-    private const RESEND_COOLDOWN_SECONDS = 30;
+    public const RESEND_COOLDOWN_SECONDS = 30; // also drives the "Resend code in Ns" countdown in the auth modal
     private const MAX_ATTEMPTS = 5;
 
     public function __construct(private SmsService $smsService)
@@ -59,7 +59,9 @@ class OtpService
                 $last = Otp::where('user_id', $user->id)->where('purpose', $purpose)->latest()->first();
 
                 if ($last && $last->created_at->gt(now()->subSeconds(self::RESEND_COOLDOWN_SECONDS))) {
-                    $wait = self::RESEND_COOLDOWN_SECONDS - (int) now()->diffInSeconds($last->created_at);
+                    // Carbon 3 diffs are signed - measure elapsed time as an absolute value.
+                    $elapsed = (int) floor($last->created_at->diffInSeconds(now(), true));
+                    $wait = max(1, self::RESEND_COOLDOWN_SECONDS - $elapsed);
 
                     Log::info('OTP: resend blocked by cooldown', ['user_id' => $user->id, 'purpose' => $purpose, 'wait_seconds' => $wait]);
 

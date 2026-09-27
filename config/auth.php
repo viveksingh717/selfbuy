@@ -120,4 +120,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Self-Registration
+    |--------------------------------------------------------------------------
+    |
+    | /admin/register creates accounts that can sign in to the admin panel, so it
+    | is closed unless explicitly switched on (e.g. briefly, to create the first
+    | admin). Keep ADMIN_REGISTRATION_ENABLED=false in production.
+    |
+    */
+
+    'admin_registration' => (bool) env('ADMIN_REGISTRATION_ENABLED', false),
+
 ];

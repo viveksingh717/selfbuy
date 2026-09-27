@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeOfferMail;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\OrderService;
+use App\Services\OfferCouponService;
 use App\Services\OtpService;
 use App\Services\ResponseService;
 use App\Services\WishlistService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class OtpController extends Controller
 {
@@ -59,17 +63,58 @@ class OtpController extends Controller
         $wishlistService->mergeGuestWishlistIntoUser($preAuthSessionId, $user->id);
         $orderService->linkGuestOrdersToUser($user->email, $user->id);
 
-        $request->session()->forget(['2fa_user_id', '2fa_purpose', '2fa_remember']);
+        // First-time sign-up: email registration, or a Google account created in this flow.
+        $isNewAccount = $purpose === 'registration'
+            || (int) $request->session()->get('2fa_new_account') === $user->id;
+
+        $request->session()->forget(['2fa_user_id', '2fa_purpose', '2fa_remember', '2fa_new_account']);
 
         Log::info('OTP: session established', ['user_id' => $user->id, 'purpose' => $purpose]);
 
-        $message = $purpose === 'registration'
+        $message = $isNewAccount
             ? 'Welcome, '.$user->name.'! Your account is verified.'
             : 'Logged in successfully!';
 
-        return $request->ajax()
-            ? $rs->setSuccessResponse($message, [])
+        $data = [];
+        if ($isNewAccount && ($coupon = $this->grantWelcomeOffer($user))) {
+            // The auth modal shows this in a popup that waits for the customer (see navbar.blade.php).
+            $data['welcome_coupon'] = [
+                'code'    => $coupon->coupon_code,
+                'percent' => OfferCouponService::percentText($coupon->discount_value),
+            ];
+            $message .= ' Your welcome code for '.$data['welcome_coupon']['percent'].'% off is '.$coupon->coupon_code.'.';
+        }
+
+        $response = $request->ajax()
+            ? $rs->setSuccessResponse($message, $data)
             : redirect()->route('home')->with('success', $message);
+
+        // Remember that this browser belongs to a customer, so the "Sign Up & Get X% Off"
+        // banner stays hidden even after they log out (~400 days, the browser maximum).
+        return $response->withCookie(cookie()->forever('sb_has_account', '1'));
+    }
+
+    /** Issue + email the welcome coupon. Best-effort: never blocks the login. */
+    private function grantWelcomeOffer(User $user)
+    {
+        try {
+            $alreadyHad = (bool) $user->welcome_coupon_id;
+            $coupon = app(OfferCouponService::class)->issueWelcomeFor($user);
+
+            if ($coupon && !$alreadyHad) {
+                try {
+                    Mail::to($user->email)->send(new WelcomeOfferMail($user, $coupon));
+                } catch (Throwable $e) {
+                    Log::error('Welcome offer mail failed: '.$e->getMessage(), ['user_id' => $user->id]);
+                }
+            }
+
+            return $coupon;
+        } catch (Throwable $e) {
+            Log::error('Welcome offer coupon failed: '.$e->getMessage(), ['user_id' => $user->id]);
+
+            return null;
+        }
     }
 
     public function resend(Request $request, ResponseService $rs)

@@ -38,7 +38,8 @@ class SettingController extends Controller
         $rules = [];
         foreach ($fields as $key => $meta) {
             $rules[$key] = match ($meta['type']) {
-                'file'    => 'nullable|file|max:4096|mimes:jpg,jpeg,png,gif,webp,svg',
+                'file'    => 'nullable|file|max:4096|mimes:jpg,jpeg,png,gif,webp',
+                'number'  => 'nullable|numeric|min:' . ($meta['min'] ?? 0) . '|max:' . ($meta['max'] ?? 999999),
                 'boolean' => 'nullable|boolean',
                 default   => 'nullable|string|max:5000',
             };

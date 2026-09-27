@@ -27,7 +27,7 @@ class HomeSettingService
      * Carousel slides (home_slides) and partner logos (home_partners) are separate rows - see saveSlides()/savePartners().
      * 'placeholder' is the bundled image shown until the admin uploads one.
      *
-     * type: text | textarea | boolean | file
+     * type: text | textarea | boolean | number | file
      */
     public static function schema(): array
     {
@@ -44,13 +44,46 @@ class HomeSettingService
             'signup_offer' => [
                 'label'  => 'Sign Up Offer',
                 'fields' => [
-                    'signup_offer_enabled'     => ['type' => 'boolean',  'label' => 'Show Sign Up Offer', 'default' => '1'],
+                    'signup_offer_enabled'     => ['type' => 'boolean',  'label' => 'Show Sign Up Offer', 'default' => '1',
+                        'help' => 'The banner is only shown to visitors who are not logged in and have not signed in on this browser before.'],
                     'signup_offer_title'       => ['type' => 'text',     'label' => 'Title',              'default' => 'Sign Up & Get 10% Off'],
                     'signup_offer_button_text' => ['type' => 'text',     'label' => 'Button Name',        'default' => 'SIGN UP'],
                     'signup_offer_button_link' => ['type' => 'text',     'label' => 'Button Link',        'default' => '/register'],
                     'signup_offer_background'  => ['type' => 'file',     'label' => 'Background Image',   'accept' => 'image/*',
                         'placeholder' => 'assets/images/backgrounds/cta/bg-6.jpg'],
                     'signup_offer_text'        => ['type' => 'textarea', 'label' => 'Description',        'default' => 'SelfBuy is your trusted online shopping destination, offering a wide range of quality products at competitive prices.'],
+
+                    // Welcome coupon - a unique single-use code emailed when a new account is verified.
+                    'signup_offer_coupon_enabled'  => ['type' => 'boolean', 'label' => 'Give New Accounts a Welcome Coupon', 'default' => '1',
+                        'help' => 'Each new customer gets their own single-use code once their account is verified. Keep the Title above in line with the percentage.'],
+                    'signup_offer_percent'         => ['type' => 'number',  'label' => 'Welcome Discount (%)', 'default' => '10', 'min' => 0, 'max' => 100],
+                    'signup_offer_valid_days'      => ['type' => 'number',  'label' => 'Coupon Valid For (days)', 'default' => '30', 'min' => 1, 'max' => 365],
+                    'signup_offer_max_discount'    => ['type' => 'number',  'label' => 'Coupon Max Discount (₹)', 'default' => '200', 'min' => 0, 'max' => 1000000,
+                        'help' => 'Leave empty for no cap.'],
+                    'signup_offer_min_order'       => ['type' => 'number',  'label' => 'Coupon Minimum Order (₹)', 'default' => '500', 'min' => 0, 'max' => 1000000],
+                ],
+            ],
+
+            'newsletter_popup' => [
+                'label'  => 'Newsletter Popup',
+                'fields' => [
+                    'newsletter_popup_enabled'       => ['type' => 'boolean',  'label' => 'Show Newsletter Popup', 'default' => '1'],
+                    'newsletter_popup_delay'         => ['type' => 'number',   'label' => 'Open After (seconds)', 'default' => '5', 'min' => 0, 'max' => 120],
+                    'newsletter_popup_offer_prefix'  => ['type' => 'text',     'label' => 'Text Before Offer (e.g. "get")', 'default' => 'get'],
+                    'newsletter_popup_offer_percent' => ['type' => 'number',   'label' => 'Offer Percentage (%)', 'default' => '25', 'min' => 0, 'max' => 100,
+                        'help' => 'Leave empty to hide the percentage.'],
+                    'newsletter_popup_offer_text'    => ['type' => 'text',     'label' => 'Text After Offer (e.g. "off")', 'default' => 'off'],
+                    'newsletter_popup_image'         => ['type' => 'file',     'label' => 'Popup Image', 'accept' => 'image/*',
+                        'placeholder' => 'assets/images/popup/newsletter/img-1.jpg'],
+                    'newsletter_popup_description'   => ['type' => 'textarea', 'label' => 'Description', 'default' => 'Subscribe to the SelfBuy eCommerce newsletter to receive timely updates from your favorite products.'],
+
+                    // Subscriber coupon - a unique single-use code for "Offer Percentage", sent in the welcome email.
+                    'newsletter_coupon_enabled'      => ['type' => 'boolean',  'label' => 'Give Subscribers a Coupon', 'default' => '1',
+                        'help' => 'Each new subscriber gets their own single-use code for the Offer Percentage above.'],
+                    'newsletter_coupon_valid_days'   => ['type' => 'number',   'label' => 'Coupon Valid For (days)', 'default' => '30', 'min' => 1, 'max' => 365],
+                    'newsletter_coupon_max_discount' => ['type' => 'number',   'label' => 'Coupon Max Discount (₹)', 'default' => '500', 'min' => 0, 'max' => 1000000,
+                        'help' => 'Leave empty for no cap.'],
+                    'newsletter_coupon_min_order'    => ['type' => 'number',   'label' => 'Coupon Minimum Order (₹)', 'default' => '999', 'min' => 0, 'max' => 1000000],
                 ],
             ],
         ];
@@ -80,16 +113,21 @@ class HomeSettingService
         return $defaults;
     }
 
-    /** The single row, seeded with the schema defaults so a field the admin clears stays blank. */
+    /**
+     * The single row, seeded with the schema defaults so a field the admin clears stays blank.
+     * Looked up as "the first row" rather than id 1: 'id' is guarded on the model, so
+     * firstOrCreate(['id' => 1]) would insert a new row on every call instead of reusing one.
+     */
     private function row(): HomeSetting
     {
-        return HomeSetting::query()->firstOrCreate(['id' => 1], self::defaults());
+        return HomeSetting::query()->orderBy('id')->first()
+            ?? HomeSetting::create(self::defaults());
     }
 
     /** The single settings row as [column => value], cached until a save busts it. */
     public function all(): array
     {
-        return self::$loaded ??= Cache::rememberForever(self::CACHE_KEY, function () {
+        return self::$loaded ??= Cache::rememberForever(self::settingsCacheKey(), function () {
             return $this->row()->toArray();
         });
     }
@@ -138,7 +176,7 @@ class HomeSettingService
                     $row->{$key} = array_key_exists($key, $values) && $values[$key] ? 1 : 0;
                     break;
 
-                default: // text / textarea
+                default: // text / textarea / number
                     if (array_key_exists($key, $values)) {
                         $val = $values[$key];
                         $row->{$key} = is_string($val) ? trim($val) : $val;
@@ -150,9 +188,18 @@ class HomeSettingService
         $this->flush();
     }
 
+    /**
+     * Includes a fingerprint of the field list, so adding settings (new migration +
+     * schema entry) starts a fresh cache instead of serving a copy without the new keys.
+     */
+    private static function settingsCacheKey(): string
+    {
+        return self::CACHE_KEY . ':' . substr(md5(implode(',', array_keys(self::fields()))), 0, 12);
+    }
+
     public function flush(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        Cache::forget(self::settingsCacheKey());
         Cache::forget(self::SLIDES_CACHE_KEY);
         Cache::forget(self::PARTNERS_CACHE_KEY);
         self::$loaded = null;

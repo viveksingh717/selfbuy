@@ -139,7 +139,7 @@ class BrandController extends Controller
         try
         {
             $validator = Validator::make($request->all(), [
-                'brand_image' => 'required|image|mimes:jpeg,jpg,png,gif,svg|max:2048'
+                'brand_image' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:2048'
             ]);
 
             if ($validator->fails()) {

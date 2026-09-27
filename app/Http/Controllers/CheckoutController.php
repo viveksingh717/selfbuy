@@ -8,8 +8,9 @@ use App\Services\CheckoutAccountService;
 use App\Services\OrderService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
@@ -78,9 +79,9 @@ class CheckoutController extends Controller
         $billingData = collect($data)->except(['create_account', 'account_password', 'payment_method'])->toArray();
 
         if ($wantsAccount) {
-            // Encrypted, never plaintext — this may sit in the payments table for
-            // minutes if the customer takes a while on a gateway's checkout page.
-            $billingData['account_password_encrypted'] = Crypt::encryptString($data['account_password']);
+            // One-way hash (same as users.password) - this may sit in the payments table while the
+            // customer is on a gateway's checkout page, so it must never be recoverable.
+            $billingData['account_password_hash'] = Hash::make($data['account_password']);
         }
 
         if (in_array($data['payment_method'], ['razorpay', 'stripe', 'paypal', 'instamojo'], true)) {
@@ -104,7 +105,9 @@ class CheckoutController extends Controller
     {
         $order = $this->orderService->findByOrderNumber($orderNumber);
 
-        if (!$order) {
+        // The page shows the customer's email, phone and address - only for whoever placed
+        // the order (same rule as the payment pages' ownsPayment()).
+        if (!$order || !$this->ownsOrder($order)) {
             return redirect()->route('home');
         }
 
@@ -120,5 +123,12 @@ class CheckoutController extends Controller
         }
 
         return redirect()->route("payment.{$gateway}.show", $result['data']->id);
+    }
+
+    private function ownsOrder($order): bool
+    {
+        return Auth::guard('web')->check()
+            ? (int) $order->user_id === (int) Auth::guard('web')->id()
+            : $order->session_id !== null && $order->session_id === Session::getId();
     }
 }
