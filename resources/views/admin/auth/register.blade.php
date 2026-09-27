@@ -61,7 +61,7 @@
                 </div>
             </form>
         </div>
-        <div class="text-center text-muted">
+        <div class="text-center text-muted auth-card-footer">
             Already have account? <a href="{{ route('admin.login') }}">Login Here!</a>
         </div>
     </div>

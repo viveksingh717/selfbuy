@@ -44,7 +44,7 @@
                                     <label for="reset-password">New Password *</label>
                                     <div class="password-field-wrapper">
                                         <input type="password" class="form-control" id="reset-password" name="password"
-                                            required minlength="6">
+                                            required minlength="8">
                                         <i class="icon-eye password-toggle-icon" data-target="#reset-password" title="Show password"></i>
                                     </div>
                                     @error('password') <div class="text-danger small">{{ $message }}</div> @enderror
@@ -54,7 +54,7 @@
                                     <label for="reset-password-confirmation">Confirm New Password *</label>
                                     <div class="password-field-wrapper">
                                         <input type="password" class="form-control" id="reset-password-confirmation"
-                                            name="password_confirmation" required minlength="6">
+                                            name="password_confirmation" required minlength="8">
                                         <i class="icon-eye password-toggle-icon" data-target="#reset-password-confirmation" title="Show password"></i>
                                     </div>
                                 </div><!-- End .form-group -->

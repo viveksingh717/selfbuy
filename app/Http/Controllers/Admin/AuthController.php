@@ -97,7 +97,7 @@ class AuthController extends Controller
         $request->validate([
             'name'     => 'required|string|max:100',
             'email'    => 'required|email:rfc,dns|regex:/(.+)@(.+)\.(.+)/i|max:255|unique:users,email',
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', 'min:8'],
             'terms'    => 'required|accepted',
         ], [
             'email.unique'    => 'An account with this email already exists. Please sign in instead.',
@@ -166,7 +166,7 @@ class AuthController extends Controller
         $request->validate([
             'token'    => 'required',
             'email'    => 'required|email:rfc,filter',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $status = Password::reset(

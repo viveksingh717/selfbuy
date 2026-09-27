@@ -272,6 +272,14 @@
                 </a>
             </li>
 
+            <li class="g_heading">Account</li>
+
+            <li>
+                <a href="{{ route('admin.logout') }}">
+                    <i class="fa fa-sign-out"></i><span>Logout</span>
+                </a>
+            </li>
+
         </ul>
     </nav>
 </div>

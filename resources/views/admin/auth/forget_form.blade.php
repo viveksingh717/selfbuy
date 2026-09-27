@@ -30,7 +30,7 @@
                 </div>
             </form>
         </div>
-        <div class="text-center text-muted">
+        <div class="text-center text-muted auth-card-footer">
             Forget it, <a href="{{ route('admin.login') }}">Send me Back</a> to the Login page.
         </div>
     </div>

@@ -16,8 +16,8 @@
                 </div>                        
             </div>
         </div>
-        <div class="row clearfix row-deck">
-            <div class="col-xl-2 col-lg-4 col-md-6">
+        <div class="row dash-stats clearfix row-deck">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Total Orders</h3>
@@ -28,7 +28,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-4 col-md-6">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Pending Orders</h3>
@@ -39,7 +39,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-4 col-md-6">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Payment Process</h3>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-4 col-md-6">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Success Status</h3>
@@ -61,7 +61,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-4 col-md-6">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Open Requests</h3>
@@ -72,7 +72,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-2 col-lg-4 col-md-6">
+            <div class="col-6 col-md-6 col-lg-4 col-xl-2">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Active Orders</h3>

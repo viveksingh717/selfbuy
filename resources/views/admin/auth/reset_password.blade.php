@@ -31,7 +31,7 @@
                 <div class="form-group">
                     <label class="form-label" for="password">New password</label>
                     <input type="password" class="form-control" name="password" id="password"
-                        placeholder="New password" minlength="6" required>
+                        placeholder="New password" minlength="8" required>
                     @if ($errors->has('password'))
                         <div class="text-danger">{{ $errors->first('password') }}</div>
                     @endif
@@ -40,7 +40,7 @@
                 <div class="form-group">
                     <label class="form-label" for="password_confirmation">Confirm new password</label>
                     <input type="password" class="form-control" name="password_confirmation"
-                        id="password_confirmation" placeholder="Confirm new password" minlength="6" required>
+                        id="password_confirmation" placeholder="Confirm new password" minlength="8" required>
                 </div>
 
                 <div class="form-footer">
@@ -48,7 +48,7 @@
                 </div>
             </form>
         </div>
-        <div class="text-center text-muted">
+        <div class="text-center text-muted auth-card-footer">
             Remembered it? <a href="{{ route('admin.login') }}">Back to Login</a>
         </div>
     </div>

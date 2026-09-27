@@ -88,7 +88,7 @@
                                         <label for="register-password">Password *</label>
                                         <div class="password-field-wrapper">
                                             <input type="password" class="form-control" id="register-password"
-                                                name="password" required minlength="6">
+                                                name="password" required minlength="8">
                                             <i class="icon-eye password-toggle-icon" data-target="#register-password" title="Show password"></i>
                                         </div>
                                     </div><!-- End .form-group -->

@@ -253,13 +253,13 @@
 
                                         <label>New password *</label>
                                         <div class="password-field-wrapper">
-                                            <input type="password" name="password" id="new-password" class="form-control" required minlength="6">
+                                            <input type="password" name="password" id="new-password" class="form-control" required minlength="8">
                                             <i class="icon-eye password-toggle-icon" data-target="#new-password" title="Show password"></i>
                                         </div>
 
                                         <label>Confirm new password *</label>
                                         <div class="password-field-wrapper mb-2">
-                                            <input type="password" name="password_confirmation" id="confirm-new-password" class="form-control" required minlength="6">
+                                            <input type="password" name="password_confirmation" id="confirm-new-password" class="form-control" required minlength="8">
                                             <i class="icon-eye password-toggle-icon" data-target="#confirm-new-password" title="Show password"></i>
                                         </div>
 

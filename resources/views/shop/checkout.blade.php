@@ -149,7 +149,7 @@
                                             <label for="checkout-account-password">Password *</label>
                                             <div class="password-field-wrapper">
                                                 <input type="password" class="form-control" id="checkout-account-password"
-                                                    name="account_password" minlength="6">
+                                                    name="account_password" minlength="8">
                                                 <i class="icon-eye password-toggle-icon" data-target="#checkout-account-password" title="Show password"></i>
                                             </div>
                                             @error('account_password') <div class="text-danger small">{{ $message }}</div> @enderror

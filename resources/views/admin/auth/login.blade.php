@@ -17,7 +17,8 @@
             <form action="{{ route('admin.login_process') }}" method="post" id="loginForm">
                 @csrf
                 <div class="form-group">
-                    <input type="email" class="form-control" name="email" id="email"
+                    <label class="form-label" for="email">Email address</label>
+                    <input type="email" class="form-control" name="email" id="email" autocomplete="username"
                         value="{{ old('email', $rememberedEmail) }}" placeholder="Enter email">
                     @if ($errors->has('email'))
                         <div class="text-danger">{{ $errors->first('email') }}</div>
@@ -27,7 +28,7 @@
                     <label class="form-label">Password<a href="{{ route('admin.forget_password') }}" class="float-right small">I
                             forgot password</a></label>
                     <input type="password" class="form-control" name="password" id="password"
-                        placeholder="Password" value="{{ old('password') }}">
+                        placeholder="Password" autocomplete="current-password">
                     @if ($errors->has('password'))
                         <div class="text-danger">{{ $errors->first('password') }}</div>
                     @endif
@@ -46,7 +47,7 @@
             </form>
         </div>
         @if (config('auth.admin_registration'))
-            <div class="text-center text-muted">
+            <div class="text-center text-muted auth-card-footer">
                 Don't have account yet? <a href="{{ route('admin.register') }}">Register Here!</a>
             </div>
         @endif

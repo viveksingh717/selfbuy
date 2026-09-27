@@ -28,7 +28,7 @@
     <!-- Core css -->
     <link rel="stylesheet" href="{{ asset('admin_assets/css/main.css') }}" />
     <link rel="stylesheet" href="{{ asset('admin_assets/css/theme1.css') }}" />
-    <link rel="stylesheet" href="{{ asset('admin_assets/css/admin-custom.css') }}" />
+    <link rel="stylesheet" href="{{ asset('admin_assets/css/admin-custom.css') }}?v={{ filemtime(public_path('admin_assets/css/admin-custom.css')) }}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
     @vite('resources/js/module/admin.js')

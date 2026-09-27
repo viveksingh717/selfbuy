@@ -64,7 +64,7 @@ class CheckoutController extends Controller
             'account_password' => array_filter([
                 'nullable',
                 'string',
-                'min:6',
+                'min:8',
                 $isGuest ? 'required_if:create_account,1' : null,
             ]),
         ]);

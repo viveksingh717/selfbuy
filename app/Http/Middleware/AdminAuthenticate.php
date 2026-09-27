@@ -61,6 +61,17 @@ class AdminAuthenticate implements AuthenticatesRequests
     {
         $this->authenticate($request, $guards);
 
+        // Re-check the role on every request: an account demoted from admin (or deactivated)
+        // loses panel access immediately, not only when its session happens to expire.
+        $admin = $this->auth->guard('admin')->user();
+        if ((int) $admin->role_type !== 1 || (isset($admin->status) && (int) $admin->status === 0)) {
+            $this->auth->guard('admin')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('admin.login')->with('error', 'You are not authorized user to access admin panel!');
+        }
+
         return $next($request);
     }
 
