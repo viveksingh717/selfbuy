@@ -17,6 +17,8 @@ class Category extends Model
         'description',
         'category_image',
         'is_featured',
+        'show_on_home',
+        'home_order',
         'status',
         'meta_title',
         'meta_description'

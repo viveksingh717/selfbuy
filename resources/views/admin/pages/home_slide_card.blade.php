@@ -20,7 +20,7 @@
                     <input type="checkbox" name="{{ $name }}[delete]" value="1"> Delete this slide
                 </label>
             @else
-                <button type="button" class="btn btn-sm btn-outline-danger js-remove-slide">
+                <button type="button" class="btn btn-sm btn-outline-danger js-remove-item">
                     <i class="fa fa-trash"></i> Remove
                 </button>
             @endif

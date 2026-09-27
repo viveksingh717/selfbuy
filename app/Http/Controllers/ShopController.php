@@ -52,6 +52,17 @@ class ShopController extends Controller
         return view('shop.products', $data);
     }
 
+    public function allProducts(Request $request)
+    {
+        $filters = $this->extractFilters($request);
+
+        $data = $this->filterWidgetData($filters);
+        $data['products'] = $this->productService->getAllProducts($filters);
+        $data['categories'] = $this->productService->getCategoriesWithProductCounts();
+
+        return view('shop.all_products', $data);
+    }
+
     public function search(Request $request)
     {
         $term = trim((string) $request->input('q', ''));

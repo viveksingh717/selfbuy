@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\HomePartner;
 use App\Models\HomeSetting;
 use App\Models\HomeSlide;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,7 @@ class HomeSettingService
 {
     private const CACHE_KEY = 'home_settings';
     private const SLIDES_CACHE_KEY = 'home_slides';
+    private const PARTNERS_CACHE_KEY = 'home_partners';
     private const FILE_DIR  = 'home';
 
     /** In-request copy so repeated home_setting() calls don't hit the cache store again. */
@@ -21,7 +24,7 @@ class HomeSettingService
     /**
      * Drives the admin form only (tabs, labels, input types, defaults).
      * Every key here must match a column on the home_settings table.
-     * Carousel slides are separate rows in home_slides - see slides()/saveSlides().
+     * Carousel slides (home_slides) and partner logos (home_partners) are separate rows - see saveSlides()/savePartners().
      * 'placeholder' is the bundled image shown until the admin uploads one.
      *
      * type: text | textarea | boolean | file
@@ -151,6 +154,7 @@ class HomeSettingService
     {
         Cache::forget(self::CACHE_KEY);
         Cache::forget(self::SLIDES_CACHE_KEY);
+        Cache::forget(self::PARTNERS_CACHE_KEY);
         self::$loaded = null;
     }
 
@@ -198,25 +202,25 @@ class HomeSettingService
             }
 
             if (!empty($data['delete'])) {
-                $this->deleteSlideImage($slide->image);
-                $this->deleteSlideImage($slide->image_mobile);
+                $this->deleteImage($slide->image);
+                $this->deleteImage($slide->image_mobile);
                 $slide->delete();
                 continue;
             }
 
             if (!empty($data['remove_image_mobile'])) {
-                $this->deleteSlideImage($slide->image_mobile);
+                $this->deleteImage($slide->image_mobile);
                 $slide->image_mobile = null;
             }
 
             $slide->fill($this->slideValues($data));
-            $this->storeSlideImages($slide, $files['slides'][$id] ?? []);
+            $this->storeImages($slide, $files['slides'][$id] ?? [], ['image', 'image_mobile'], 'slides');
             $slide->save();
         }
 
         foreach ($newSlides as $index => $data) {
             $slide = new HomeSlide($this->slideValues($data));
-            $this->storeSlideImages($slide, $files['new_slides'][$index] ?? []);
+            $this->storeImages($slide, $files['new_slides'][$index] ?? [], ['image', 'image_mobile'], 'slides');
             $slide->save();
         }
 
@@ -234,14 +238,74 @@ class HomeSettingService
         return $values;
     }
 
-    private function storeSlideImages(HomeSlide $slide, array $files): void
+    // ── Partner logos ────────────────────────────────────────
+
+    /** Active partner logos for the storefront, in display order (cached until a save busts it). */
+    public function partners(): Collection
     {
-        foreach (['image', 'image_mobile'] as $field) {
+        return Cache::rememberForever(self::PARTNERS_CACHE_KEY, function () {
+            return HomePartner::active()->ordered()->get();
+        });
+    }
+
+    /** Every partner (including hidden ones) for the admin form. */
+    public function allPartners(): Collection
+    {
+        return HomePartner::ordered()->get();
+    }
+
+    /**
+     * Sync the Partners tab: update/delete existing partners and create new ones.
+     * Same shapes as saveSlides(), keyed 'partners' / 'new_partners'.
+     */
+    public function savePartners(array $partners, array $newPartners, array $files): void
+    {
+        foreach ($partners as $id => $data) {
+            $partner = HomePartner::find($id);
+            if (!$partner) {
+                continue;
+            }
+
+            if (!empty($data['delete'])) {
+                $this->deleteImage($partner->image);
+                $partner->delete();
+                continue;
+            }
+
+            $partner->fill($this->partnerValues($data));
+            $this->storeImages($partner, $files['partners'][$id] ?? [], ['image'], 'partners');
+            $partner->save();
+        }
+
+        foreach ($newPartners as $index => $data) {
+            $partner = new HomePartner($this->partnerValues($data));
+            $this->storeImages($partner, $files['new_partners'][$index] ?? [], ['image'], 'partners');
+            $partner->save();
+        }
+
+        $this->flush();
+    }
+
+    private function partnerValues(array $data): array
+    {
+        return [
+            'name'       => isset($data['name']) ? trim((string) $data['name']) : null,
+            'link'       => isset($data['link']) ? trim((string) $data['link']) : null,
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+            'status'     => !empty($data['status']),
+        ];
+    }
+
+    // ── Shared image handling (slides, partners) ─────────────
+
+    private function storeImages(Model $row, array $files, array $fields, string $folder): void
+    {
+        foreach ($fields as $field) {
             if (isset($files[$field]) && $files[$field] instanceof UploadedFile) {
-                $this->deleteSlideImage($slide->{$field});
+                $this->deleteImage($row->{$field});
                 $file = $files[$field];
-                $slide->{$field} = $file->storeAs(
-                    self::FILE_DIR . '/slides',
+                $row->{$field} = $file->storeAs(
+                    self::FILE_DIR . '/' . $folder,
                     $field . '-' . uniqid() . '.' . $file->getClientOriginalExtension(),
                     'public'
                 );
@@ -250,7 +314,7 @@ class HomeSettingService
     }
 
     /** Only uploads are deleted - bundled theme images ("assets/...") are left alone. */
-    private function deleteSlideImage(?string $path): void
+    private function deleteImage(?string $path): void
     {
         if ($path && !str_starts_with($path, 'assets/')) {
             Storage::disk('public')->delete($path);

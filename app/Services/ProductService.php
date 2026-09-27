@@ -65,6 +65,7 @@ class ProductService {
             // flags
             $product->status                 = $data['status'];
             $product->is_featured            = $data['is_featured'];
+            $product->is_trending            = $data['is_trending']            ?? 0;
 
             // SEO
             $product->meta_title             = $data['meta_title']             ?? null;
@@ -375,6 +376,29 @@ class ProductService {
             ->first();
     }
 
+    /** Active products flagged "Trending" in admin, newest first - for the home page Trendy section. */
+    public function getTrendingProducts($limit = 4)
+    {
+        return ProductModel::with(['category', 'subCategory'])
+            ->withCount('attributes')
+            ->where('status', 1)
+            ->where('is_trending', 1)
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /** Latest active products - for the home page New Arrivals section. */
+    public function getNewArrivals($limit = 8)
+    {
+        return ProductModel::with(['category', 'subCategory'])
+            ->withCount('attributes')
+            ->where('status', 1)
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
     public function getRelatedProducts(ProductModel $product, $limit = 6)
     {
         return ProductModel::query()
@@ -402,6 +426,33 @@ class ProductService {
         $this->applyProductFilters($query, $filters);
 
         return $query->paginate($perPage)->withQueryString();
+    }
+
+    /** Every active product (with the shop filters/sort applied) - the "All Products" page. */
+    public function getAllProducts(array $filters = [], $perPage = 12)
+    {
+        $query = ProductModel::query()
+            ->with(['category', 'subCategory'])
+            ->withCount('attributes')
+            ->where('status', 1);
+
+        $this->applyProductFilters($query, $filters);
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    /** Active categories with their active-product count, for the All Products sidebar. */
+    public function getCategoriesWithProductCounts()
+    {
+        $counts = ProductModel::where('status', 1)
+            ->selectRaw('category_id, COUNT(*) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        return $this->getActiveCategories()
+            ->each(fn ($category) => $category->products_count = (int) ($counts[$category->id] ?? 0))
+            ->filter(fn ($category) => $category->products_count > 0)
+            ->values();
     }
 
     public function searchProducts($term, array $filters = [], $perPage = 12)

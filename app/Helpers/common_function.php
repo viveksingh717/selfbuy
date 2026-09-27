@@ -92,3 +92,11 @@ if (!function_exists('home_slides')) {
         return app(HomeSettingService::class)->slides();
     }
 }
+
+if (!function_exists('home_partners')) {
+    /** Active partner logos shown below the home page carousel, in display order. */
+    function home_partners()
+    {
+        return app(HomeSettingService::class)->partners();
+    }
+}

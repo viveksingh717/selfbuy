@@ -23,6 +23,9 @@
                         <li class="nav-item">
                             <a class="nav-link active show" data-toggle="tab" href="#tab-carousel">Carousel</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#tab-partners">Partners</a>
+                        </li>
                         @foreach ($schema as $groupKey => $section)
                             <li class="nav-item">
                                 <a class="nav-link" data-toggle="tab"
@@ -58,12 +61,39 @@
                             @forelse ($slides as $slide)
                                 @include('admin.pages.home_slide_card', ['slide' => $slide, 'name' => "slides[{$slide->id}]", 'old' => "slides.{$slide->id}"])
                             @empty
-                                <p class="text-muted js-no-slides">No slides yet - add one below.</p>
+                                <p class="text-muted js-empty">No slides yet - add one below.</p>
                             @endforelse
                         </div>
 
-                        <button type="button" class="btn btn-outline-primary mb-3" id="add-slide">
+                        <button type="button" class="btn btn-outline-primary mb-3 js-add-item"
+                            data-list="home-slides" data-template="slide-template">
                             <i class="fa fa-plus"></i> Add Slide
+                        </button>
+                    </div>
+
+                    {{-- Partners: logos shown below the carousel (home_partners table) --}}
+                    <div class="tab-pane fade" id="tab-partners">
+                        @if ($errors->has('partners.*') || $errors->has('new_partners.*'))
+                            <div class="alert alert-danger">
+                                @foreach (array_unique(array_merge($errors->get('partners.*'), $errors->get('new_partners.*')), SORT_REGULAR) as $messages)
+                                    @foreach ((array) $messages as $message)
+                                        <div>{{ $message }}</div>
+                                    @endforeach
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div id="home-partners">
+                            @forelse ($partners as $partner)
+                                @include('admin.pages.home_partner_card', ['partner' => $partner, 'name' => "partners[{$partner->id}]", 'old' => "partners.{$partner->id}"])
+                            @empty
+                                <p class="text-muted js-empty">No partners yet - add one below.</p>
+                            @endforelse
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary mb-3 js-add-item"
+                            data-list="home-partners" data-template="partner-template">
+                            <i class="fa fa-plus"></i> Add Partner
                         </button>
                     </div>
 
@@ -147,30 +177,36 @@
 @endsection
 
 @section('script')
-    {{-- Blank slide card, cloned by "Add Slide". __INDEX__ is swapped for a unique number. --}}
+    {{-- Blank cards cloned by the "Add ..." buttons. __INDEX__ is swapped for a unique number. --}}
     <template id="slide-template">
         @include('admin.pages.home_slide_card', ['slide' => null, 'name' => 'new_slides[__INDEX__]', 'old' => null])
+    </template>
+    <template id="partner-template">
+        @include('admin.pages.home_partner_card', ['partner' => null, 'name' => 'new_partners[__INDEX__]', 'old' => null])
     </template>
 
     <script>
         (function () {
-            var list = document.getElementById('home-slides');
-            var template = document.getElementById('slide-template').innerHTML;
             var nextIndex = 0;
 
-            document.getElementById('add-slide').addEventListener('click', function () {
-                var empty = list.querySelector('.js-no-slides');
-                if (empty) empty.remove();
+            document.querySelectorAll('.js-add-item').forEach(function (button) {
+                var list = document.getElementById(button.dataset.list);
+                var template = document.getElementById(button.dataset.template).innerHTML;
 
-                var wrapper = document.createElement('div');
-                wrapper.innerHTML = template.replace(/__INDEX__/g, nextIndex++);
-                var card = wrapper.firstElementChild;
-                list.appendChild(card);
-                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                button.addEventListener('click', function () {
+                    var empty = list.querySelector('.js-empty');
+                    if (empty) empty.remove();
+
+                    var wrapper = document.createElement('div');
+                    wrapper.innerHTML = template.replace(/__INDEX__/g, nextIndex++);
+                    var card = wrapper.firstElementChild;
+                    list.appendChild(card);
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
             });
 
-            list.addEventListener('click', function (e) {
-                var btn = e.target.closest('.js-remove-slide');
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('.js-remove-item');
                 if (btn) btn.closest('.home-slide-card').remove();
             });
         })();

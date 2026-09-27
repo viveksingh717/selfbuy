@@ -2,11 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\CategoryService;
+use App\Services\ProductService;
+use App\Services\WishlistService;
+use Illuminate\Support\Collection;
+
 class HomeController extends Controller
 {
-    public function index()
+    public function index(ProductService $productService, CategoryService $categoryService, WishlistService $wishlistService)
     {
-        return view('selfbuy');
+        // Trendy Products = products marked "Trending" in admin.
+        $trendyProducts = $productService->getTrendingProducts(12);
+
+        // New Arrivals = latest active products; "All" shows the newest 8.
+        $newArrivals = $productService->getNewArrivals(8);
+
+        return view('selfbuy', [
+            'trendyProducts'       => $trendyProducts,
+            'trendyCategories'     => $this->tabCategories($trendyProducts),
+            'homeCategories'       => $categoryService->getHomeCategories(),
+            'newArrivals'          => $newArrivals,
+            'newArrivalCategories' => $this->tabCategories($newArrivals),
+            'wishlistedProductIds' => $wishlistService->getWishlistedProductIds(),
+        ]);
+    }
+
+    /**
+     * Category tabs for a product section: the (up to 4) categories with the most
+     * products in it, so a category only gets a tab when it has products to show.
+     */
+    private function tabCategories(Collection $products, int $limit = 4): Collection
+    {
+        return $products
+            ->groupBy('category_id')
+            ->filter(fn ($group) => $group->first()->category)
+            ->sortByDesc(fn ($group) => $group->count())
+            ->take($limit)
+            ->map(fn ($group) => $group->first()->category);
     }
 
     public function about()

@@ -273,6 +273,7 @@ class ProductController extends Controller
             'sku'                    => 'nullable|string|max:100|unique:product_models,sku',
             'status'                 => 'required|in:0,1,2',
             'is_featured'            => 'required|in:0,1',
+            'is_trending'            => 'nullable|in:0,1',
             'short_description'      => 'nullable|string',
             'description'            => 'nullable|string',
             'additional_description' => 'nullable|string',
@@ -316,7 +317,7 @@ class ProductController extends Controller
         if ($validators->passes()) {
             $data = $request->only([
                 'product_name', 'product_slug', 'sku',
-                'status', 'is_featured',
+                'status', 'is_featured', 'is_trending',
                 'short_description', 'description', 'additional_description',
                 'category_id', 'sub_category_id', 'brand_id',
                 'original_price', 'selling_price', 'cost_price', 'discount',

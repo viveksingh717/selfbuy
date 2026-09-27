@@ -108,6 +108,8 @@ class CategoryController extends Controller
                 'cat_description'=>'nullable|string|max:500',
                 'category_image' => 'nullable|string',
                 'is_featured'=>'required|boolean',
+                'show_on_home'=>'nullable|boolean',
+                'home_order'=>'nullable|integer|min:0',
                 'status'=>'required|boolean',
                 'meta_title'=>'nullable|string|max:60',
                 'meta_description'=>'nullable|string|max:160'
@@ -120,6 +122,8 @@ class CategoryController extends Controller
                     'description' => $request->cat_description ?? '',
                     'category_image' => $request->category_image ?? null,
                     'is_featured' => $request->is_featured,
+                    'show_on_home' => $request->show_on_home ?? 0,
+                    'home_order' => $request->home_order ?? 0,
                     'status' => $request->status,
                     'meta_title' => $request->meta_title ?? '',
                     'meta_description' => $request->meta_description ?? ''
@@ -221,6 +225,8 @@ class CategoryController extends Controller
                 'cat_description'=>'nullable|string|max:500',
                 'category_image' => 'nullable|string',
                 'is_featured'=>'required|boolean',
+                'show_on_home'=>'nullable|boolean',
+                'home_order'=>'nullable|integer|min:0',
                 'status'=>'required|boolean',
                 'meta_title'=>'nullable|string|max:60',
                 'meta_description'=>'nullable|string|max:160'
@@ -233,6 +239,8 @@ class CategoryController extends Controller
                     'description' => $request->cat_description ?? '',
                     'category_image' => $request->category_image ?? $category->category_image,
                     'is_featured' => $request->is_featured ,
+                    'show_on_home' => $request->show_on_home ?? 0,
+                    'home_order' => $request->home_order ?? 0,
                     'status' => $request->status,
                     'meta_title' => $request->meta_title ?? '',
                     'meta_description' => $request->meta_description ?? ''

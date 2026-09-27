@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * Lets the admin pick which categories appear in the home page
+     * "Shop by Categories" section, and in what order.
+     */
+    public function up(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->boolean('show_on_home')->default(false)->after('is_featured');
+            $table->unsignedInteger('home_order')->default(0)->after('show_on_home');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('categories', function (Blueprint $table) {
+            $table->dropColumn(['show_on_home', 'home_order']);
+        });
+    }
+};

@@ -18,6 +18,8 @@ class CategoryService {
             $category->description       = $data['description'] ?? null;
             $category->category_image    = $data['category_image'] ?? null;
             $category->is_featured       = $data['is_featured'];
+            $category->show_on_home      = $data['show_on_home'] ?? 0;
+            $category->home_order        = $data['home_order'] ?? 0;
             $category->status            = $data['status'];
             $category->meta_title        = $data['meta_title'] ?? null;
             $category->meta_description  = $data['meta_description'] ?? null;
@@ -61,6 +63,8 @@ class CategoryService {
             $category->description       = $data['description'];
             $category->category_image    = $data['category_image'] ?? $category->category_image;
             $category->is_featured       = $data['is_featured'];
+            $category->show_on_home      = $data['show_on_home'] ?? 0;
+            $category->home_order        = $data['home_order'] ?? 0;
             $category->status            = $data['status'];
             $category->meta_title        = $data['meta_title'];
             $category->meta_description  = $data['meta_description'];
@@ -202,4 +206,13 @@ class CategoryService {
     //     ->first();
     // }
 
+    /** Active categories marked "Show on Home", for the home page "Shop by Categories" section. */
+    public function getHomeCategories()
+    {
+        return Category::where('status', 1)
+            ->where('show_on_home', 1)
+            ->orderBy('home_order')
+            ->orderBy('category_name')
+            ->get();
+    }
 }

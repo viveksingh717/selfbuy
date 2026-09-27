@@ -22,6 +22,7 @@ class SettingController extends Controller
             'schema'   => HomeSettingService::schema(),
             'settings' => $this->homeSettingService->all(),
             'slides'   => $this->homeSettingService->allSlides(),
+            'partners' => $this->homeSettingService->allPartners(),
         ]);
     }
 
@@ -65,8 +66,25 @@ class SettingController extends Controller
             ];
         }
 
+        // Partner logos (any number), same shape as slides.
+        $rules += [
+            'partners'                => 'nullable|array',
+            'partners.*.image'        => 'nullable|file|max:2048|mimes:jpg,jpeg,png,gif,webp,svg',
+            'new_partners'            => 'nullable|array',
+            'new_partners.*.image'    => 'required|file|max:2048|mimes:jpg,jpeg,png,gif,webp,svg',
+        ];
+        foreach (['partners', 'new_partners'] as $group) {
+            $rules += [
+                "{$group}.*.name"       => 'nullable|string|max:255',
+                "{$group}.*.link"       => 'nullable|string|max:255',
+                "{$group}.*.sort_order" => 'nullable|integer|min:0',
+                "{$group}.*.status"     => 'nullable|boolean',
+            ];
+        }
+
         $request->validate($rules, [
-            'new_slides.*.image.required' => 'Every new slide needs a desktop image.',
+            'new_slides.*.image.required'   => 'Every new slide needs a desktop image.',
+            'new_partners.*.image.required' => 'Every new partner needs a logo image.',
         ]);
 
         $values = [];
@@ -91,6 +109,15 @@ class SettingController extends Controller
             [
                 'slides'     => (array) $request->file('slides', []),
                 'new_slides' => (array) $request->file('new_slides', []),
+            ]
+        );
+
+        $this->homeSettingService->savePartners(
+            (array) $request->input('partners', []),
+            (array) $request->input('new_partners', []),
+            [
+                'partners'     => (array) $request->file('partners', []),
+                'new_partners' => (array) $request->file('new_partners', []),
             ]
         );
 

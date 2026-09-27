@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/product/{slug}', [ShopController::class, 'productDetails'])->name('product.details');
 Route::get('/search', [ShopController::class, 'search'])->name('search');
+Route::get('/products', [ShopController::class, 'allProducts'])->name('products');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add', [CartController::class, 'store'])->name('cart.add');

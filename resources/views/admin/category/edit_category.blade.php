@@ -99,6 +99,22 @@
                                 </div>
 
                                 <div class="row clearfix">
+                                    <div class="col-md-3 col-sm-12">
+                                        <label>Show on Home</label>
+                                        <select class="form-control show-tick" name="show_on_home" id="show_on_home">
+                                            <option value="0" {{ !$category->show_on_home ? 'selected' : '' }}>No</option>
+                                            <option value="1" {{ $category->show_on_home ? 'selected' : '' }}>Yes</option>
+                                        </select>
+                                        <small class="text-muted">Shows in "Shop by Categories" on the home page.</small>
+                                    </div>
+                                    <div class="col-md-3 col-sm-12">
+                                        <label>Home Order</label>
+                                        <input type="number" min="0" class="form-control" name="home_order" id="home_order" value="{{ $category->home_order }}">
+                                        <small class="text-muted">Lower numbers show first.</small>
+                                    </div>
+                                </div>
+
+                                <div class="row clearfix">
                                     <div class="col-md-6 col-sm-12">
                                         <div class="form-group">
                                             <label>Description</label>
