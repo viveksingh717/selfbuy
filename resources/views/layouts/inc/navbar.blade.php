@@ -389,6 +389,10 @@
                 showOtpStep();
             @else
                 $('#{{ session('open_auth_modal') === 'register' ? 'register-tab' : 'signin-tab' }}').tab('show');
+                @if (session('error'))
+                    {{-- e.g. "Please sign in to view your order." (storefront pages have no global flash area) --}}
+                    $('#signin .auth-alert').html($('<div class="alert alert-warning"></div>').text(@json(session('error'))));
+                @endif
             @endif
             $('#signin-modal').modal('show');
         @endif

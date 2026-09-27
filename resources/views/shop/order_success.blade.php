@@ -29,6 +29,19 @@
                         <strong>{{ $order->order_number }}</strong>.</p>
                 </div>
 
+                {{-- Order journey: Placed -> Processing -> Shipped -> Delivered (updated from the admin panel) --}}
+                <div class="row justify-content-center mb-4">
+                    <div class="col-lg-8">
+                        <div class="border rounded p-3 p-md-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap:8px">
+                                <h5 class="mb-0">Track your order</h5>
+                                <small class="text-muted">Payment: {{ ucfirst($order->payment_status) }} ({{ $order->paymentMethodLabel() }})</small>
+                            </div>
+                            @include('partials.order_journey', ['order' => $order])
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row justify-content-center">
                     <div class="col-lg-8">
                         <table class="table table-cart table-mobile">

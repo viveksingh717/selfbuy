@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageSettingController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -297,6 +298,17 @@ Route::prefix('admin')->group(function () {
         Route::post('/product_attribute_upload', [ProductController::class, 'product_attribute_upload'])->name('admin.product_attribute_upload');
         Route::delete('/delete_product_attribute/{id}', [ProductController::class, 'delete_product_attribute'])->name('admin.delete_product_attribute');
         Route::get('/get_subcategories/{category_id}', [ProductController::class, 'get_subcategories'])->name('admin.get_subcategories');
+
+        // Order Routes (Protected by adminAuth middleware)
+        Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
+        Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
+        Route::post('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
+        Route::post('/orders/{id}/payment_status', [OrderController::class, 'updatePaymentStatus'])->name('admin.orders.payment_status');
+        Route::post('/orders/{id}/tracking', [OrderController::class, 'updateTracking'])->name('admin.orders.tracking');
+        Route::post('/orders/{id}/send_email', [OrderController::class, 'sendEmail'])->name('admin.orders.send_email');
+        Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('admin.orders.delete');
+        Route::post('/orders/{id}/note', [OrderController::class, 'addNote'])->name('admin.orders.note');
+        Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice'])->name('admin.orders.invoice');
 
         // Pages Routes (Protected by adminAuth middleware)
         // One list for every static storefront page; pages are seeded, so there

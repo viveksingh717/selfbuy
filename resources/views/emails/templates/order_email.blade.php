@@ -3,7 +3,7 @@
 @php
     $customerName = trim($order->first_name.' '.$order->last_name);
     $paymentMethodLabel = $order->paymentMethodLabel();
-    $trackingUrl = route('checkout.success', $order->order_number);
+    $trackingUrl = $order->viewUrl(); // signed - opens without logging in
     $userEmail = $order->email; // used by emails.layouts.master footer
 @endphp
 

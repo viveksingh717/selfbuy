@@ -101,14 +101,23 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.success', $order->order_number);
     }
 
-    public function success(string $orderNumber)
+    public function success(Request $request, string $orderNumber)
     {
-        $order = $this->orderService->findByOrderNumber($orderNumber);
+        // Look up without OrderService::findByOrderNumber(): that one only returns the order to its
+        // owner, which would hide it from the signed email link. Access is decided just below.
+        $order = Order::with('items')->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return redirect()->route('home');
+        }
 
         // The page shows the customer's email, phone and address - only for whoever placed
-        // the order (same rule as the payment pages' ownsPayment()).
-        if (!$order || !$this->ownsOrder($order)) {
-            return redirect()->route('home');
+        // the order (same rule as the payment pages' ownsPayment()), or anyone opening the
+        // signed "View your order" link from that order's emails (Order::viewUrl()).
+        if (!$this->ownsOrder($order) && !$request->hasValidSignature()) {
+            return Auth::guard('web')->check()
+                ? redirect()->route('myaccount')->with('error', "Order #{$order->order_number} belongs to a different account. Log in with the account that placed it, or use the \"View your order\" link in its email.")
+                : redirect()->route('home')->with(['open_auth_modal' => 'signin', 'error' => 'Please sign in to view your order.']);
         }
 
         return view('shop.order_success', compact('order'));

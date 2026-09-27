@@ -206,8 +206,8 @@
                 </ul>
             </li>
 
-            <li class="{{ Request::is('admin/order') ? 'active' : '' }}">
-                <a href="#">
+            <li class="{{ Request::is('admin/orders*') ? 'active' : '' }}">
+                <a href="{{ route('admin.orders') }}">
                     <i class="fa fa-shopping-cart"></i><span>Order List</span>
                 </a>
             </li>

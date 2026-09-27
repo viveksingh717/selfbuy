@@ -122,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
                 'title' => 'New order ' . $order->order_number,
                 'body'  => trim(($order->first_name ?? '') . ' ' . ($order->last_name ?? '')) . ' · '
                     . setting('currency_symbol', '₹') . number_format((float) $order->total, 2),
-                'url'   => route('admin.dashboard'),
+                'url'   => route('admin.orders.show', $order->id),
                 'icon'  => 'fa-shopping-cart',
                 'data'  => ['order_id' => $order->id, 'order_number' => $order->order_number],
             ]);

@@ -54,6 +54,10 @@
                         <div class="col-md-8 col-lg-9">
                             <div class="tab-content">
                                 <div class="tab-pane fade show active" id="tab-dashboard" role="tabpanel" aria-labelledby="tab-dashboard-link">
+                                    @if (session('error'))
+                                        {{-- e.g. opened an order that belongs to a different account --}}
+                                        <div class="alert alert-warning">{{ session('error') }}</div>
+                                    @endif
                                     <p>Hello <span class="font-weight-normal text-dark">{{ $user->name }}</span>.</p>
 
                                     <div class="row">
