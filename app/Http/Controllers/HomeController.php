@@ -4,23 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Services\CategoryService;
 use App\Services\ProductService;
+use App\Services\StorefrontCacheService;
 use App\Services\WishlistService;
 use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
-    public function index(ProductService $productService, CategoryService $categoryService, WishlistService $wishlistService)
+    public function index(ProductService $productService, CategoryService $categoryService, WishlistService $wishlistService, StorefrontCacheService $cache)
     {
         // Trendy Products = products marked "Trending" in admin.
-        $trendyProducts = $productService->getTrendingProducts(12);
+        $trendyProducts = $cache->remember('home:trending', fn () => $productService->getTrendingProducts(12));
 
         // New Arrivals = latest active products; "All" shows the newest 8.
-        $newArrivals = $productService->getNewArrivals(8);
+        $newArrivals = $cache->remember('home:new-arrivals', fn () => $productService->getNewArrivals(8));
 
         return view('selfbuy', [
             'trendyProducts'       => $trendyProducts,
             'trendyCategories'     => $this->tabCategories($trendyProducts),
-            'homeCategories'       => $categoryService->getHomeCategories(),
+            'homeCategories'       => $cache->remember('home:categories', fn () => $categoryService->getHomeCategories()),
             'newArrivals'          => $newArrivals,
             'newArrivalCategories' => $this->tabCategories($newArrivals),
             'wishlistedProductIds' => $wishlistService->getWishlistedProductIds(),

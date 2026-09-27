@@ -15,7 +15,7 @@ class PasswordResetController extends Controller
     public function sendResetLink(Request $request, ResponseService $rs)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email' => 'required|email:rfc,filter',
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +49,7 @@ class PasswordResetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'token'    => 'required',
-            'email'    => 'required|email',
+            'email'    => 'required|email:rfc,filter',
             'password' => 'required|string|min:8|confirmed',
         ]);
 

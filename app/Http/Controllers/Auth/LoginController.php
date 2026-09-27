@@ -22,7 +22,7 @@ class LoginController extends Controller
     public function store(Request $request, ResponseService $rs)
     {
         $validator = Validator::make($request->all(), [
-            'email'    => 'required|email|max:255',
+            'email'    => 'required|email:rfc,filter|max:255',
             'password' => 'required|string',
         ]);
 

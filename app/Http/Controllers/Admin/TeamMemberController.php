@@ -180,7 +180,7 @@ class TeamMemberController extends Controller
             'name'          => 'required|string|max:150',
             'designation'   => 'nullable|string|max:150',
             'bio'           => 'nullable|string|max:2000',
-            'email'         => 'nullable|email|max:190',
+            'email'         => 'nullable|email:rfc,filter|max:190',
             'phone'         => 'nullable|string|max:30',
             'facebook_url'  => 'nullable|url|max:255',
             'twitter_url'   => 'nullable|url|max:255',

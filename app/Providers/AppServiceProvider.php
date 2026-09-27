@@ -3,9 +3,15 @@
 namespace App\Providers;
 
 use App\Models\AdminNotification;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\ProductAttribute;
+use App\Models\ProductModel;
+use App\Models\SubCategory;
 use App\Models\ContactUs;
 use App\Models\Order;
 use App\Services\CartService;
+use App\Services\StorefrontCacheService;
 use App\Services\WishlistService;
 use Illuminate\Auth\Events\Attempting;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -35,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+
+        // Storefront cache (menus + home blocks): drop it whenever the catalogue changes in admin.
+        $flushStorefront = fn () => app(StorefrontCacheService::class)->flush();
+        foreach ([ProductModel::class, Category::class, SubCategory::class, Brand::class, ProductAttribute::class] as $model) {
+            $model::saved($flushStorefront);
+            $model::deleted($flushStorefront);
+        }
 
         // The session ID is regenerated as part of the login process, so the guest
         // session ID must be captured on Attempting (fired before login) rather

@@ -30,7 +30,7 @@ class ProfileController extends Controller
 
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:150'],
-            'email'         => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($admin->id)],
+            'email'         => ['required', 'email:rfc,filter', 'max:190', Rule::unique('users', 'email')->ignore($admin->id)],
             'phone_number'  => ['nullable', 'string', 'max:30'],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
