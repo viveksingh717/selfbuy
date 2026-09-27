@@ -35,7 +35,11 @@
                         <div class="border rounded p-3 p-md-4">
                             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3" style="gap:8px">
                                 <h5 class="mb-0">Track your order</h5>
-                                <small class="text-muted">Payment: {{ ucfirst($order->payment_status) }} ({{ $order->paymentMethodLabel() }})</small>
+                                <div class="d-flex flex-wrap align-items-center" style="gap:10px">
+                                    <small class="text-muted">Payment: {{ ucfirst($order->payment_status) }} ({{ $order->paymentMethodLabel() }})</small>
+                                    {{-- signed: works even when this page was opened from an email without logging in --}}
+                                    <a href="{{ $order->invoiceUrl() }}" class="btn btn-outline-primary-2 btn-sm"><i class="icon-long-arrow-down"></i><span>DOWNLOAD INVOICE</span></a>
+                                </div>
                             </div>
                             @include('partials.order_journey', ['order' => $order])
                         </div>

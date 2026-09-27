@@ -85,9 +85,15 @@ class OtpController extends Controller
             $message .= ' Your welcome code for '.$data['welcome_coupon']['percent'].'% off is '.$coupon->coupon_code.'.';
         }
 
+        // Page that required sign-in (e.g. Track My Order) - the modal JS goes there instead of reloading.
+        $intended = $request->session()->pull('url.intended');
+        if ($intended && str_starts_with($intended, url('/'))) {
+            $data['redirect'] = $intended;
+        }
+
         $response = $request->ajax()
             ? $rs->setSuccessResponse($message, $data)
-            : redirect()->route('home')->with('success', $message);
+            : redirect()->to($data['redirect'] ?? route('home'))->with('success', $message);
 
         // Remember that this browser belongs to a customer, so the "Sign Up & Get X% Off"
         // banner stays hidden even after they log out (~400 days, the browser maximum).

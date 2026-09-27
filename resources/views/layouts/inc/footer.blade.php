@@ -6,19 +6,25 @@
                     <div class="widget widget-about">
                         <img src="{{ asset('light_logo.png') }}" class="footer-logo" alt="Footer Logo" width="106"
                             height="30">
-                        <p>SelfBuy is your one-stop online shopping destination for quality products, exclusive
-                            deals, and a seamless shopping experience. Shop Smart, Buy Better with SelfBuy.</p>
+                        <p>{{ setting('footer_about_text', 'SelfBuy is your one-stop online shopping destination for quality products, exclusive deals, and a seamless shopping experience. Shop Smart, Buy Better with SelfBuy.') }}</p>
 
-                        <div class="social-icons">
-                            <a href="https://www.facebook.com/login/" class="social-icon" title="Facebook"
-                                target="_blank"><i class="icon-facebook-f"></i></a>
-                            <a href="https://twitter.com/login" class="social-icon" title="Twitter" target="_blank"><i
-                                    class="icon-twitter"></i></a>
-                            <a href="https://www.instagram.com/accounts/login/" class="social-icon" title="Instagram"
-                                target="_blank"><i class="icon-instagram"></i></a>
-                            <a href="https://www.youtube.com/" class="social-icon" title="Youtube" target="_blank"><i
-                                    class="icon-youtube"></i></a>
-                        </div><!-- End .soial-icons -->
+                        {{-- Profile links from Admin > System Settings > Social; an icon only shows once its URL is set --}}
+                        @php
+                            $socials = collect([
+                                'facebook_url'  => ['Facebook', 'icon-facebook-f'],
+                                'twitter_url'   => ['Twitter', 'icon-twitter'],
+                                'instagram_url' => ['Instagram', 'icon-instagram'],
+                                'youtube_url'   => ['Youtube', 'icon-youtube'],
+                                'linkedin_url'  => ['LinkedIn', 'icon-linkedin'],
+                            ])->filter(fn ($meta, $key) => filled(setting($key)));
+                        @endphp
+                        @if ($socials->isNotEmpty())
+                            <div class="social-icons">
+                                @foreach ($socials as $key => [$label, $icon])
+                                    <a href="{{ setting($key) }}" class="social-icon" title="{{ $label }}" target="_blank" rel="noopener"><i class="{{ $icon }}"></i></a>
+                                @endforeach
+                            </div><!-- End .soial-icons -->
+                        @endif
                     </div><!-- End .widget about-widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
 
@@ -30,17 +36,7 @@
                             <li><a href="{{ route('home') }}">Home</a></li>
                             <li><a href="{{ route('about') }}">About Us</a></li>
                             <li><a href="{{ route('faq') }}">FAQ</a></li>
-                            <li><a href="{{ route('contact') }}">Contact us</a></li>
-                            @guest
-                                <li><a href="#signin-modal" data-toggle="modal">Log in</a></li>
-                            @else
-                                <li>
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" style="background:none;border:0;padding:0;font:inherit;color:inherit;">Log out</button>
-                                    </form>
-                                </li>
-                            @endguest
+                            <li><a href="{{ route('contact') }}">Contact Us</a></li>
                         </ul><!-- End .widget-list -->
                     </div><!-- End .widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
@@ -50,12 +46,12 @@
                         <h4 class="widget-title">Customer Service</h4><!-- End .widget-title -->
 
                         <ul class="widget-list">
-                            <li><a href="#">Payment Methods</a></li>
-                            <li><a href="#">Money-back guarantee!</a></li>
-                            <li><a href="#">Returns</a></li>
-                            <li><a href="#">Shipping</a></li>
-                            <li><a href="#">Terms and conditions</a></li>
-                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="{{ route('payment') }}">Payment Methods</a></li>
+                            <li><a href="{{ route('money_back_guarantee') }}">Money-back Guarantee</a></li>
+                            <li><a href="{{ route('refund_policy') }}">Returns &amp; Refunds</a></li>
+                            <li><a href="{{ route('shipping') }}">Shipping</a></li>
+                            <li><a href="{{ route('terms_conditions') }}">Terms &amp; Conditions</a></li>
+                            <li><a href="{{ route('privacy_policy') }}">Privacy Policy</a></li>
                         </ul><!-- End .widget-list -->
                     </div><!-- End .widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
@@ -67,13 +63,21 @@
                         <ul class="widget-list">
                             @guest
                                 <li><a href="#signin-modal" data-toggle="modal">Sign In</a></li>
+                                <li><a href="{{ route('track_order') }}">Track My Order</a></li>
+                                <li><a href="{{ route('cart.index') }}">View Cart</a></li>
+                                <li><a href="{{ route('wishlist.index') }}">My Wishlist</a></li>
                             @else
-                                <li><a href="javascript:void(0)">{{ Auth::user()->name }}</a></li>
+                                <li><a href="{{ route('myaccount') }}">My Account</a></li>
+                                <li><a href="{{ route('track_order') }}">Track My Order</a></li>
+                                <li><a href="{{ route('cart.index') }}">View Cart</a></li>
+                                <li><a href="{{ route('wishlist.index') }}">My Wishlist</a></li>
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" style="background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;">Logout</button>
+                                    </form>
+                                </li>
                             @endguest
-                            <li><a href="{{ route('cart.index') }}">View Cart</a></li>
-                            <li><a href="{{ route('wishlist.index') }}">My Wishlist</a></li>
-                            <li><a href="#">Track My Order</a></li>
-                            {{-- <li><a href="#">Help</a></li> --}}
                         </ul><!-- End .widget-list -->
                     </div><!-- End .widget -->
                 </div><!-- End .col-sm-6 col-lg-3 -->
@@ -83,7 +87,7 @@
 
     <div class="footer-bottom">
         <div class="container">
-            <p class="footer-copyright">Copyright © {{ date('Y') }} SelfBuy Store. All Rights Reserved.</p>
+            <p class="footer-copyright">Copyright © {{ date('Y') }} {{ setting('footer_copyright', 'SelfBuy Store. All Rights Reserved.') }}</p>
             <!-- End .footer-copyright -->
             <figure class="footer-payments">
                 <img src="{{ asset('assets/images/payments.png') }}" alt="Payment methods" width="272"

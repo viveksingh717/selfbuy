@@ -212,8 +212,8 @@
                 </a>
             </li>
 
-            <li class="{{ Request::is('admin/transation_history') ? 'active' : '' }}">
-                <a href="#">
+            <li class="{{ Request::is('admin/transactions*') ? 'active' : '' }}">
+                <a href="{{ route('admin.transactions') }}">
                     <i class="fa fa-exchange"></i><span>Transaction History</span>
                 </a>
             </li>

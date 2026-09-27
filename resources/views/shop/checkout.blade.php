@@ -3,6 +3,14 @@
 @section('subTitle', 'Checkout')
 
 @section('style')
+    <style>
+        /* Place Order busy state */
+        .btn-order.is-busy { pointer-events: none; opacity: .85; }
+        .btn-order.is-busy .btn-hover-text { display: none !important; }
+        .btn-order.is-busy .btn-text { display: inline-flex !important; align-items: center; gap: .8rem; transform: none !important; opacity: 1 !important; }
+        .order-spinner { width: 1.6rem; height: 1.6rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: order-spin .7s linear infinite; }
+        @keyframes order-spin { to { transform: rotate(360deg); } }
+    </style>
 @endsection
 
 @section('content')
@@ -258,7 +266,7 @@
                                         @error('payment_method') <div class="text-danger small">{{ $message }}</div> @enderror
                                     </div>
 
-                                    <button type="submit" class="btn btn-outline-primary-2 btn-order btn-block">
+                                    <button type="submit" class="btn btn-outline-primary-2 btn-order btn-block" id="place-order-btn">
                                         <span class="btn-text" id="place-order-btn-text">Place Order</span>
                                         <span class="btn-hover-text" id="place-order-btn-hover-text">Place Order</span>
                                     </button>
@@ -292,6 +300,35 @@
 
             updatePlaceOrderButtonLabel();
             $('.payment-method-option').on('change', updatePlaceOrderButtonLabel);
+
+            // ── Place Order: show progress + block double submission ──
+            // (The submit event only fires once the browser's own form validation has passed.)
+            var submitting = false;
+            $('#checkout-form').on('submit', function (e) {
+                if (submitting) {
+                    e.preventDefault();          // second click / Enter while the order is being placed
+                    return;
+                }
+                submitting = true;
+
+                var selected = $('.payment-method-option:checked').val();
+                var isGateway = ['razorpay', 'stripe', 'paypal', 'instamojo'].indexOf(selected) !== -1;
+                var busyText = isGateway ? 'Redirecting to payment...' : 'Placing your order...';
+
+                $('#place-order-btn').addClass('is-busy').attr('aria-busy', 'true')
+                    .find('.btn-text').html('<span class="order-spinner" aria-hidden="true"></span>' + busyText);
+                // Disable after the browser has read the form, so the submit itself still goes through.
+                setTimeout(function () { $('#place-order-btn').prop('disabled', true); }, 0);
+            });
+
+            // Back button can restore this page from cache with the busy button - reset it.
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) {
+                    submitting = false;
+                    $('#place-order-btn').removeClass('is-busy').prop('disabled', false).removeAttr('aria-busy');
+                    updatePlaceOrderButtonLabel();
+                }
+            });
 
             $('#coupon-form').on('submit', function (e) {
                 e.preventDefault();

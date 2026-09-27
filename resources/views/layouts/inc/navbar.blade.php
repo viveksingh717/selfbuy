@@ -272,6 +272,15 @@
             );
         }
 
+        // After sign-in: go to the page that asked for it (server sends data.redirect), else reload.
+        function goAfterAuth(res) {
+            if (res && res.data && res.data.redirect) {
+                window.location.href = res.data.redirect;
+            } else {
+                window.location.reload();
+            }
+        }
+
         function submitAuthForm($form) {
             var $scope = $form.closest('.tab-pane, .otp-step, .forgot-password-step');
             var $submitBtn = $form.find('button[type="submit"]');
@@ -312,12 +321,12 @@
                             .append($('<p>').css({ fontSize: '1.3rem', color: '#777' }).text('Enter it in your cart at checkout. We have also emailed it to you.'));
 
                         Swal.fire({ icon: 'success', title: 'Welcome! Your account is verified.', html: $html.html(), confirmButtonText: 'Start Shopping' })
-                            .then(function () { window.location.reload(); });
+                            .then(function () { goAfterAuth(res); });
                         return;
                     }
 
                     Swal.fire({ icon: 'success', title: res.message, timer: 1200, showConfirmButton: false })
-                        .then(function () { window.location.reload(); });
+                        .then(function () { goAfterAuth(res); });
                 },
                 error: function (xhr) {
                     var res = xhr.responseJSON || {};

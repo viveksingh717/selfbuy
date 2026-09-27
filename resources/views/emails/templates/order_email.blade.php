@@ -20,6 +20,7 @@
     </p>
 
     <a href="{{ $trackingUrl }}" class="btn-primary">View Your Order</a>
+    <p class="text-muted" style="margin-top:-8px;">Need a bill for your records? <a href="{{ $order->invoiceUrl() }}">Download your invoice (PDF)</a></p>
 
     <hr class="divider">
 

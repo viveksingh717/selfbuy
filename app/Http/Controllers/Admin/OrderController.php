@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\AdminOrderService;
+use App\Services\ExportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,20 +32,7 @@ class OrderController extends Controller
             ]);
         }
 
-        $query = Order::query()
-            ->withCount('items')
-            ->when($request->filled('q'), function ($q) use ($request) {
-                $term = '%' . trim($request->q) . '%';
-                $q->where(fn ($w) => $w->where('order_number', 'like', $term)
-                    ->orWhere('email', 'like', $term)
-                    ->orWhere('phone', 'like', $term)
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$term]));
-            })
-            ->when($request->filled('order_status'), fn ($q) => $q->where('order_status', $request->order_status))
-            ->when($request->filled('payment_status'), fn ($q) => $q->where('payment_status', $request->payment_status))
-            ->when($request->filled('payment_method'), fn ($q) => $q->where('payment_method', $request->payment_method))
-            ->when($request->filled('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->filled('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date_to));
+        $query = $this->filteredOrders($request)->withCount('items');
 
         return DataTables::of($query)
             ->editColumn('order_number', fn ($o) => '<a href="' . route('admin.orders.show', $o->id) . '" class="font-weight-bold">#' . e($o->order_number) . '</a>')
@@ -149,7 +137,82 @@ class OrderController extends Controller
         return $this->respond($request, $result);
     }
 
+    /** CSV or PDF of the order list, using the same filters as the table on screen. */
+    public function export(Request $request, ExportService $export, string $format)
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $filters = $this->orderFilters($request);
+        $query = $this->filteredOrders($request)->withCount('items')->latest('created_at')->orderByDesc('id');
+        $stamp = now()->format('Y-m-d-His');
+
+        if ($format === 'csv') {
+            return $export->csv("orders-{$stamp}.csv", function ($put) use ($query) {
+                $put(['Order', 'Date', 'Customer', 'Email', 'Phone', 'City', 'State', 'Items', 'Subtotal', 'Discount', 'Coupon',
+                      'Shipping', 'Total', 'Payment method', 'Payment status', 'Order status', 'Courier', 'Tracking no.']);
+                $query->chunk(500, function ($orders) use ($put) {
+                    foreach ($orders as $o) {
+                        $put([$o->order_number, $o->created_at->format('Y-m-d H:i'), $o->customerName(), $o->email, $o->phone,
+                              $o->city, $o->state, $o->items_count, $o->subtotal, $o->discount, $o->coupon_code, $o->shipping_cost,
+                              $o->total, strtoupper($o->payment_method), $o->payment_status, $o->order_status,
+                              $o->tracking_courier, $o->tracking_number]);
+                    }
+                });
+            });
+        }
+
+        $totalCount = (clone $query)->count();
+        $summaryBase = $this->filteredOrders($request);
+
+        return $export->pdf('admin.exports.orders', [
+            'orders'     => $query->limit(ExportService::PDF_ROW_LIMIT)->get(),
+            'totalCount' => $totalCount,
+            'filterLine' => ExportService::describeFilters($filters, ['q' => 'Search', 'date_from' => 'From', 'date_to' => 'To']),
+            'summary'    => [
+                'value'   => (float) (clone $summaryBase)->sum('total'),
+                'paid'    => (float) (clone $summaryBase)->where('payment_status', 'paid')->sum('total'),
+                'pending' => (clone $summaryBase)->where('order_status', 'pending')->count(),
+            ],
+        ], "orders-{$stamp}.pdf");
+    }
+
     // ── helpers ─────────────────────────────────────────────────
+
+    /** The order list's filters (search, statuses, method, date range) - validated. */
+    private function orderFilters(Request $request): array
+    {
+        $data = $request->validate([
+            'q'              => ['nullable', 'string', 'max:100'],
+            'order_status'   => ['nullable', Rule::in(Order::STATUSES)],
+            'payment_status' => ['nullable', Rule::in(Order::PAYMENT_STATUSES)],
+            'payment_method' => ['nullable', 'string', 'max:30'],
+            'date_from'      => ['nullable', 'date'],
+            'date_to'        => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        return array_filter($data, fn ($v) => $v !== null && $v !== '');
+    }
+
+    private function filteredOrders(Request $request)
+    {
+        $f = $this->orderFilters($request);
+
+        return Order::query()
+            ->when(isset($f['q']), function ($q) use ($f) {
+                $term = '%' . trim($f['q']) . '%';
+                $q->where(fn ($w) => $w->where('order_number', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('phone', 'like', $term)
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$term]));
+            })
+            ->when(isset($f['order_status']), fn ($q) => $q->where('order_status', $f['order_status']))
+            ->when(isset($f['payment_status']), fn ($q) => $q->where('payment_status', $f['payment_status']))
+            ->when(isset($f['payment_method']), fn ($q) => $q->where('payment_method', $f['payment_method']))
+            ->when(isset($f['date_from']), fn ($q) => $q->whereDate('created_at', '>=', $f['date_from']))
+            ->when(isset($f['date_to']), fn ($q) => $q->whereDate('created_at', '<=', $f['date_to']));
+    }
+
+
 
     private function respond(Request $request, array $result)
     {

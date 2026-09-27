@@ -96,6 +96,12 @@ class Order extends Model
         return \Illuminate\Support\Facades\URL::signedRoute('checkout.success', ['orderNumber' => $this->order_number]);
     }
 
+    /** Signed invoice (bill) PDF link for emails - downloads without logging in, only for this order. */
+    public function invoiceUrl(): string
+    {
+        return \Illuminate\Support\Facades\URL::signedRoute('order.invoice', ['orderNumber' => $this->order_number]);
+    }
+
     public function customerName(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);

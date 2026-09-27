@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\CartService;
 use App\Services\CheckoutAccountService;
 use App\Services\OrderService;
@@ -103,24 +104,50 @@ class CheckoutController extends Controller
 
     public function success(Request $request, string $orderNumber)
     {
-        // Look up without OrderService::findByOrderNumber(): that one only returns the order to its
-        // owner, which would hide it from the signed email link. Access is decided just below.
-        $order = Order::with('items')->where('order_number', $orderNumber)->first();
-
-        if (!$order) {
-            return redirect()->route('home');
-        }
-
-        // The page shows the customer's email, phone and address - only for whoever placed
-        // the order (same rule as the payment pages' ownsPayment()), or anyone opening the
-        // signed "View your order" link from that order's emails (Order::viewUrl()).
-        if (!$this->ownsOrder($order) && !$request->hasValidSignature()) {
-            return Auth::guard('web')->check()
-                ? redirect()->route('myaccount')->with('error', "Order #{$order->order_number} belongs to a different account. Log in with the account that placed it, or use the \"View your order\" link in its email.")
-                : redirect()->route('home')->with(['open_auth_modal' => 'signin', 'error' => 'Please sign in to view your order.']);
+        [$order, $denied] = $this->orderForViewer($request, $orderNumber);
+        if ($denied) {
+            return $denied;
         }
 
         return view('shop.order_success', compact('order'));
+    }
+
+    /** Customer's invoice / bill as a PDF - same access rule as the order page. */
+    public function invoice(Request $request, string $orderNumber)
+    {
+        [$order, $denied] = $this->orderForViewer($request, $orderNumber);
+        if ($denied) {
+            return $denied;
+        }
+
+        return Pdf::loadView('admin.orders.invoice', compact('order'))
+            ->setOption('isFontSubsettingEnabled', true) // embed only the glyphs used -> small PDF
+            ->setPaper('a4')
+            ->download("invoice-{$order->order_number}.pdf");
+    }
+
+    /**
+     * [order, null] when the visitor may see this order, or [null, redirect] when not.
+     * Allowed: whoever placed it (same rule as the payment pages' ownsPayment()), or anyone
+     * holding a signed link from that order's emails (Order::viewUrl() / invoiceUrl()).
+     */
+    private function orderForViewer(Request $request, string $orderNumber): array
+    {
+        // Not OrderService::findByOrderNumber(): that one only returns the order to its owner,
+        // which would hide it from the signed email links. Access is decided just below.
+        $order = Order::with('items')->where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return [null, redirect()->route('home')];
+        }
+
+        if (!$this->ownsOrder($order) && !$request->hasValidSignature()) {
+            return [null, Auth::guard('web')->check()
+                ? redirect()->route('myaccount')->with('error', "Order #{$order->order_number} belongs to a different account. Log in with the account that placed it, or use the \"View your order\" link in its email.")
+                : redirect()->route('home')->with(['open_auth_modal' => 'signin', 'error' => 'Please sign in to view your order.'])];
+        }
+
+        return [$order, null];
     }
 
     private function startGatewayPayment(string $gateway, array $billingData, Request $request)

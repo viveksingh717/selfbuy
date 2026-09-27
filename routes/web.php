@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\Admin\TeamMemberController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -100,6 +101,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:checkout');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/order/{orderNumber}/invoice', [CheckoutController::class, 'invoice'])->name('order.invoice')->middleware('throttle:cart');
 
 // Payment routes are accessible to guests and logged-in users alike (unlike
 // login/register/otp below), so they sit outside the 'guest' middleware group.
@@ -192,6 +194,7 @@ Route::prefix('admin')->group(function () {
     // Routes for authenticated admin users (adminAuth middleware applied)
     Route::middleware(['adminAuth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard/export/{format}', [DashboardController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->name('admin.dashboard.export');
         Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.logout');
 
         // Global admin search (header search box)
@@ -301,6 +304,7 @@ Route::prefix('admin')->group(function () {
 
         // Order Routes (Protected by adminAuth middleware)
         Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
+        Route::get('/orders/export/{format}', [OrderController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->name('admin.orders.export');
         Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
         Route::post('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.status');
         Route::post('/orders/{id}/payment_status', [OrderController::class, 'updatePaymentStatus'])->name('admin.orders.payment_status');
@@ -309,6 +313,11 @@ Route::prefix('admin')->group(function () {
         Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('admin.orders.delete');
         Route::post('/orders/{id}/note', [OrderController::class, 'addNote'])->name('admin.orders.note');
         Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice'])->name('admin.orders.invoice');
+
+        // Transaction History (online payment attempts + COD orders) - read-only
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('admin.transactions');
+        Route::get('/transactions/export/{format?}', [TransactionController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->name('admin.transactions.export');
+        Route::get('/transactions/{id}', [TransactionController::class, 'show'])->name('admin.transactions.show');
 
         // Pages Routes (Protected by adminAuth middleware)
         // One list for every static storefront page; pages are seeded, so there

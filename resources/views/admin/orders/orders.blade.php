@@ -72,9 +72,13 @@
                             <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
                                 <input type="date" class="form-control" name="date_to" title="To date">
                             </div>
-                            <div class="col-12 d-flex" style="gap:8px">
+                            <div class="col-12 d-flex flex-wrap" style="gap:8px">
                                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Search</button>
                                 <button type="reset" class="btn btn-outline-secondary" id="resetFilters">Reset</button>
+                                <span class="ml-auto d-flex" style="gap:8px">
+                                    <a href="{{ route('admin.orders.export', 'csv') }}" class="btn btn-outline-success js-export" data-format="csv"><i class="fa fa-file-excel-o"></i> Export CSV</a>
+                                    <a href="{{ route('admin.orders.export', 'pdf') }}" class="btn btn-outline-danger js-export" data-format="pdf"><i class="fa fa-file-pdf-o"></i> Export PDF</a>
+                                </span>
                             </div>
                         </form>
                     </div>
@@ -111,6 +115,8 @@
 <script>
     $(function () {
         const $filters = $('#orderFilters');
+        // Links like ?order_status=pending (e.g. from the dashboard) pre-fill the filters.
+        new URLSearchParams(location.search).forEach((value, key) => $filters.find(`[name="${key}"]`).val(value));
         const filterValues = () => Object.fromEntries(new FormData($filters[0]));
 
         const table = $('#ordersTable').DataTable({
@@ -132,12 +138,25 @@
                 { data: 'action',       name: 'action', orderable: false, searchable: false },
             ],
             order: [[6, 'desc']],
+            initComplete: () => {
+                const status = $filters.find('[name=order_status]').val();
+                $('.order-stat').removeClass('active').filter(`[data-status="${status}"]`).addClass('active');
+            },
             pageLength: 25,
             language: { emptyTable: 'No orders match these filters.' },
         });
 
+        // Export links always carry the current filters, so the file matches the table.
+        const exportBase = { csv: '{{ route('admin.orders.export', 'csv') }}', pdf: '{{ route('admin.orders.export', 'pdf') }}' };
+        function syncExport() {
+            const qs = new URLSearchParams(Object.entries(filterValues()).filter(([, v]) => v !== '')).toString();
+            $('.js-export').each(function () { $(this).attr('href', exportBase[$(this).data('format')] + (qs ? '?' + qs : '')); });
+        }
+        syncExport();
+
         $filters.on('submit', function (e) {
             e.preventDefault();
+            syncExport();
             const status = $filters.find('[name=order_status]').val();
             $('.order-stat').removeClass('active').filter(`[data-status="${status}"]`).addClass('active');
             table.ajax.reload();

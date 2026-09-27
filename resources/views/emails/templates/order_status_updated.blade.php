@@ -47,6 +47,7 @@
 
     <p style="text-align:center;">
         <a href="{{ $orderUrl }}" class="btn-primary">View your order</a>
+        <br><a href="{{ $order->invoiceUrl() }}" style="font-size:13px;">Download invoice (PDF)</a>
     </p>
 
     <hr class="divider">

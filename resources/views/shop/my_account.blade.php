@@ -118,7 +118,11 @@
                                                             <td>{{ $order->created_at->format('d M Y') }}</td>
                                                             <td>{{ ucfirst($order->payment_status) }}</td>
                                                             <td>₹{{ number_format($order->total, 2) }}</td>
-                                                            <td><a href="{{ route('checkout.success', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm">View</a></td>
+                                                            <td class="text-nowrap">
+                                                                <a href="{{ route('track_order', ['order' => $order->order_number]) }}" class="btn btn-outline-primary-2 btn-sm">Track</a>
+                                                                <a href="{{ route('order.invoice', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm" title="Download invoice (PDF)">Invoice</a>
+                                                                <a href="{{ route('checkout.success', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm">View</a>
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -157,7 +161,11 @@
                                                             <td>{{ $order->created_at->format('d M Y') }}</td>
                                                             <td>{{ ucfirst($order->order_status) }}</td>
                                                             <td>₹{{ number_format($order->total, 2) }}</td>
-                                                            <td><a href="{{ route('checkout.success', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm">View</a></td>
+                                                            <td class="text-nowrap">
+                                                                <a href="{{ route('track_order', ['order' => $order->order_number]) }}" class="btn btn-outline-primary-2 btn-sm">Track</a>
+                                                                <a href="{{ route('order.invoice', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm" title="Download invoice (PDF)">Invoice</a>
+                                                                <a href="{{ route('checkout.success', $order->order_number) }}" class="btn btn-outline-primary-2 btn-sm">View</a>
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
