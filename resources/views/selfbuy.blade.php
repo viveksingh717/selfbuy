@@ -21,69 +21,35 @@
                                     }
                                 }
                             }'>
-                            <div class="intro-slide">
-                                <figure class="slide-image">
-                                    <picture>
-                                        <source media="(max-width: 480px)" srcset="{!! asset('assets/images/slider/slide-1-480w.jpg') !!}">
-                                        <img src="{!! asset('assets/images/slider/slide-1.jpg') !!}" alt="Image Desc">
-                                    </picture>
-                                </figure><!-- End .slide-image -->
+                            @foreach (home_slides() as $slide)
+                                <div class="intro-slide">
+                                    <figure class="slide-image">
+                                        <picture>
+                                            <source media="(max-width: 480px)" srcset="{{ $slide->image_mobile_url }}">
+                                            <img src="{{ $slide->image_url }}" alt="{{ str_replace("\n", ' ', $slide->title ?: 'Slide') }}">
+                                        </picture>
+                                    </figure><!-- End .slide-image -->
 
-                                <div class="intro-content">
-                                    <h3 class="intro-subtitle">Topsale Collection</h3>
-                                    <!-- End .h3 intro-subtitle -->
-                                    <h1 class="intro-title">Living Room<br>Furniture</h1>
-                                    <!-- End .intro-title -->
+                                    <div class="intro-content">
+                                        @if ($slide->subtitle)
+                                            <h3 class="intro-subtitle">{{ $slide->subtitle }}</h3>
+                                        @endif
+                                        @if ($slide->title)
+                                            <h1 class="intro-title">{!! nl2br(e($slide->title)) !!}</h1>
+                                        @endif
+                                        @if ($slide->description)
+                                            <p class="intro-text text-white mb-2">{{ $slide->description }}</p>
+                                        @endif
 
-                                    <a href="category.html" class="btn btn-outline-white">
-                                        <span>SHOP NOW</span>
-                                        <i class="icon-long-arrow-right"></i>
-                                    </a>
-                                </div><!-- End .intro-content -->
-                            </div><!-- End .intro-slide -->
-
-                            <div class="intro-slide">
-                                <figure class="slide-image">
-                                    <picture>
-                                        <source media="(max-width: 480px)"
-                                            srcset="{{ asset('assets/images/slider/slide-2-480w.jpg') }}">
-                                        <img src="{{ asset('assets/images/slider/slide-2.jpg') }}" alt="Image Desc">
-                                    </picture>
-                                </figure><!-- End .slide-image -->
-
-                                <div class="intro-content">
-                                    <h3 class="intro-subtitle">News and Inspiration</h3>
-                                    <!-- End .h3 intro-subtitle -->
-                                    <h1 class="intro-title">New Arrivals</h1><!-- End .intro-title -->
-
-                                    <a href="category.html" class="btn btn-outline-white">
-                                        <span>SHOP NOW</span>
-                                        <i class="icon-long-arrow-right"></i>
-                                    </a>
-                                </div><!-- End .intro-content -->
-                            </div><!-- End .intro-slide -->
-
-                            <div class="intro-slide">
-                                <figure class="slide-image">
-                                    <picture>
-                                        <source media="(max-width: 480px)"
-                                            srcset="{{ asset('assets/images/slider/slide-3-480w.jpg') }}">
-                                        <img src="{{ asset('assets/images/slider/slide-3.jpg') }}" alt="Image Desc">
-                                    </picture>
-                                </figure><!-- End .slide-image -->
-
-                                <div class="intro-content">
-                                    <h3 class="intro-subtitle">Outdoor Furniture</h3>
-                                    <!-- End .h3 intro-subtitle -->
-                                    <h1 class="intro-title">Outdoor Dining <br>Furniture</h1>
-                                    <!-- End .intro-title -->
-
-                                    <a href="category.html" class="btn btn-outline-white">
-                                        <span>SHOP NOW</span>
-                                        <i class="icon-long-arrow-right"></i>
-                                    </a>
-                                </div><!-- End .intro-content -->
-                            </div><!-- End .intro-slide -->
+                                        @if ($slide->button_text)
+                                            <a href="{{ home_link($slide->button_link) }}" class="btn btn-outline-white">
+                                                <span>{{ $slide->button_text }}</span>
+                                                <i class="icon-long-arrow-right"></i>
+                                            </a>
+                                        @endif
+                                    </div><!-- End .intro-content -->
+                                </div><!-- End .intro-slide -->
+                            @endforeach
                         </div><!-- End .intro-slider owl-carousel owl-simple -->
 
                         <span class="slider-loader"></span><!-- End .slider-loader -->
@@ -189,7 +155,7 @@
 
     <div class="container">
         <div class="heading heading-center mb-3">
-            <h2 class="title-lg">Trendy Products</h2><!-- End .title -->
+            <h2 class="title-lg">{{ home_setting('trendy_products_title') }}</h2><!-- End .title -->
 
             <ul class="nav nav-pills justify-content-center" role="tablist">
                 <li class="nav-item">
@@ -735,7 +701,7 @@
     </div><!-- End .container -->
 
     <div class="container categories pt-6">
-        <h2 class="title-lg text-center mb-4">Shop by Categories</h2><!-- End .title-lg text-center -->
+        <h2 class="title-lg text-center mb-4">{{ home_setting('shop_by_category_title') }}</h2><!-- End .title-lg text-center -->
 
         <div class="row">
             <div class="col-6 col-lg-4">
@@ -803,7 +769,7 @@
 
     <div class="container">
         <div class="heading heading-center mb-6">
-            <h2 class="title">Recent Arrivals</h2><!-- End .title -->
+            <h2 class="title">{{ home_setting('new_arrivals_title') }}</h2><!-- End .title -->
 
             <ul class="nav nav-pills nav-border-anim justify-content-center" role="tablist">
                 <li class="nav-item">
@@ -1554,29 +1520,32 @@
                     class="icon-long-arrow-right"></i></a>
         </div><!-- End .more-container -->
     </div>
-    <div class="cta cta-display bg-image pt-4 pb-4"
-        style="background-image: url(assets/images/backgrounds/cta/bg-6.jpg);">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-10 col-lg-9 col-xl-8">
-                    <div class="row no-gutters flex-column flex-sm-row align-items-sm-center">
-                        <div class="col">
-                            <h3 class="cta-title text-white">Sign Up & Get 10% Off</h3><!-- End .cta-title -->
-                            <p class="cta-desc text-white">SelfBuy is your trusted online shopping
-                                destination, offering a wide range of quality products at competitive prices.
-                            </p>
-                            <!-- End .cta-desc -->
-                        </div><!-- End .col -->
+    @if (home_setting('signup_offer_enabled'))
+        <div class="cta cta-display bg-image pt-4 pb-4"
+            style="background-image: url('{{ home_asset('signup_offer_background') }}');">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-lg-9 col-xl-8">
+                        <div class="row no-gutters flex-column flex-sm-row align-items-sm-center">
+                            <div class="col">
+                                <h3 class="cta-title text-white">{{ home_setting('signup_offer_title') }}</h3><!-- End .cta-title -->
+                                @if (home_setting('signup_offer_text'))
+                                    <p class="cta-desc text-white">{{ home_setting('signup_offer_text') }}</p>
+                                @endif
+                            </div><!-- End .col -->
 
-                        <div class="col-auto">
-                            <a href="login.html" class="btn btn-outline-white"><span>SIGN UP</span><i
-                                    class="icon-long-arrow-right"></i></a>
-                        </div><!-- End .col-auto -->
-                    </div><!-- End .row no-gutters -->
-                </div><!-- End .col-md-10 col-lg-9 -->
-            </div><!-- End .row -->
-        </div><!-- End .container -->
-    </div>
+                            @if (home_setting('signup_offer_button_text'))
+                                <div class="col-auto">
+                                    <a href="{{ home_link(home_setting('signup_offer_button_link')) }}" class="btn btn-outline-white"><span>{{ home_setting('signup_offer_button_text') }}</span><i
+                                            class="icon-long-arrow-right"></i></a>
+                                </div><!-- End .col-auto -->
+                            @endif
+                        </div><!-- End .row no-gutters -->
+                    </div><!-- End .col-md-10 col-lg-9 -->
+                </div><!-- End .row -->
+            </div><!-- End .container -->
+        </div>
+    @endif
     <!-- End .cta -->
 @endsection
 

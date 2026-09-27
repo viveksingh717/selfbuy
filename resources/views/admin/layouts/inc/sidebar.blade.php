@@ -250,9 +250,9 @@
                 </a>
             </li>
 
-            <li>
-                <a href="#">
-                    <i class="fa fa-image"></i><span>Gallery</span>
+            <li class="{{ Request::is('admin/home_settings') ? 'active' : '' }}">
+                <a href="{{ route('admin.home_settings') }}">
+                    <i class="fa fa-cog"></i><span>Home Settings</span>
                 </a>
             </li>
 

@@ -9,16 +9,17 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\GalleryController;
-use App\Http\Controllers\Admin\SearchController;
-use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Admin\PageSettingController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SubCategoryController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TaxController;
+use App\Http\Controllers\Admin\TeamMemberController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -304,6 +305,9 @@ Route::prefix('admin')->group(function () {
         // Sysem Settings Routes (Protected by adminAuth middleware)
         Route::get('/settings', [SystemSettingController::class, 'settings'])->name('admin.settings');
         Route::post('/update_settings', [SystemSettingController::class, 'update_settings'])->name('admin.update_settings');
+
+        Route::get('/home_settings', [SettingController::class, 'home_settings'])->name('admin.home_settings');
+        Route::post('/update_home_settings', [SettingController::class, 'update_home_settings'])->name('admin.update_home_settings');
 
         // Contact Us Routes (Protected by adminAuth middleware)
         Route::get('/contact_us', [AdminContactUsController::class, 'index'])->name('admin.contact_us');
