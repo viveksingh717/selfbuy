@@ -1,66 +1,149 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SelfBuy (Vivek Singh)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+An e-commerce store built with Laravel 12: a customer storefront (catalogue, cart, wishlist, checkout, order tracking) and an admin panel (catalogue, orders, payments, reports, site settings).
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Storefront**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Product catalogue with categories, sub-categories, brands and colour/size variants (each variant has its own stock and extra price)
+- Cart and wishlist for guests and logged-in customers; a guest's cart/wishlist is merged into their account on login
+- Coupons (percentage, fixed, free shipping; date range, usage limit, minimum order, product-specific)
+- Checkout with Cash on Delivery, Razorpay, Stripe, PayPal and Instamojo
+- Customer accounts with email OTP login, Google sign-in and password reset
+- Order tracking with a status timeline, invoice PDF download, product reviews with helpful votes
+- Newsletter sign-up, contact form, CMS pages (about, FAQ, policies)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Admin panel**
 
-## Learning Laravel
+- Dashboard with KPIs, sales chart, top products, payment mix and low-stock alerts
+- Order management: status workflow (pending → processing → shipped → delivered / cancelled), tracking details, customer emails, activity history
+- Unified transaction history across all gateways and COD
+- CSV and PDF exports (dashboard report, orders, transactions)
+- Catalogue, coupons, taxes, banners, home page, team, gallery and system settings
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+|                  |                                                     |
+| ---------------- | --------------------------------------------------- |
+| Backend          | PHP 8.2+, Laravel 12, MySQL                         |
+| Frontend         | Blade, jQuery, Vite                                 |
+| PDF / CSV        | barryvdh/laravel-dompdf, streamed CSV               |
+| Admin tables     | yajra/laravel-datatables                            |
+| Payments         | Razorpay, Stripe, PayPal (Orders API v2), Instamojo |
+| Error monitoring | Bugsnag                                             |
+| Local debugging  | Laravel Telescope, Debugbar (dev only)              |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Local setup
 
-## Laravel Sponsors
+Requirements: PHP 8.2+, Composer, MySQL, Node.js. [Laravel Herd](https://herd.laravel.com) works out of the box.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone https://github.com/viveksingh717/selfbuy.git
+cd selfbuy
 
-### Premium Partners
+composer install
+npm install && npm run build
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+cp .env.example .env
+php artisan key:generate
+# set DB_DATABASE / DB_USERNAME / DB_PASSWORD in .env
 
-## Contributing
+php artisan migrate --seed     # schema + admin user, settings and demo catalogue
+php artisan storage:link
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Admin panel: `/admin`. Seeded admin accounts are defined in `database/seeders/AdminUserSeeder.php`.
 
-## Code of Conduct
+With `MAIL_MAILER=log` (the local default), login OTP codes and all emails are written to `storage/logs/laravel.log` instead of being sent.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Environments
 
-## Security Vulnerabilities
+There is one env template, `.env.example`. Its values are for local development. Every line that must be different on the live server has a `# PRODUCTION:` comment above it.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+What changes automatically with `APP_ENV` (see `AppServiceProvider::configureEnvironment()`):
 
-## License
+|                             | local   | staging    | production                   |
+| --------------------------- | ------- | ---------- | ---------------------------- |
+| Force `https://` URLs       | off     | off        | on (`APP_FORCE_HTTPS`)       |
+| Secure session cookie       | off     | off        | on (`SESSION_SECURE_COOKIE`) |
+| `migrate:fresh` / `db:wipe` | allowed | allowed    | blocked                      |
+| Telescope                   | loaded  | not loaded | not loaded                   |
+| Errors sent to Bugsnag      | no      | yes        | yes                          |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`APP_DEBUG` is **not** tied to `APP_ENV`. Set `APP_DEBUG=false` on every public server.
+
+## Payments
+
+All gateways currently run in **test / sandbox mode**. Keys go in `.env` (see the `RAZORPAY_*`, `STRIPE_*`, `PAYPAL_*`, `INSTAMOJO_*` sections in `.env.example`).
+
+- API base URLs live in `config/services.php`, not in code. `PAYPAL_SANDBOX` and `INSTAMOJO_SANDBOX` choose sandbox or live. Razorpay and Stripe pick the mode from the key type.
+- Going live means swapping in live keys and setting the two `*_SANDBOX` flags to `false`. No code changes.
+- Webhooks: `POST /webhooks/{razorpay|stripe|paypal|instamojo}`. Register them in each gateway dashboard with the server's domain. They are verified by signature (CSRF-exempt).
+
+## Error monitoring (Bugsnag)
+
+Errors reach Bugsnag through the `bugsnag` log channel. On a server:
+
+```env
+LOG_STACK=daily,bugsnag
+BUGSNAG_API_KEY=your-project-api-key
+```
+
+Only `production` and `staging` report by default (`BUGSNAG_NOTIFY_RELEASE_STAGES`), and only `error` level and above (`BUGSNAG_LOGGER_LEVEL`). Lower log levels are attached to each error as breadcrumbs.
+
+## Deploying to production
+
+1. Create `.env` from `.env.example` and change every `# PRODUCTION:` line. Most importantly:
+    - `APP_ENV=production`, `APP_DEBUG=false`, the real `APP_URL` with https
+    - real SMTP for `MAIL_*`. **Login OTPs are sent by email**, so with `MAIL_MAILER=log` nobody can sign in
+    - `LOG_STACK=daily,bugsnag`, `LOG_LEVEL=error`, `BUGSNAG_API_KEY`
+2. Install and build:
+    ```bash
+    composer install --no-dev --optimize-autoloader
+    npm ci && npm run build
+    php artisan key:generate          # first deploy only
+    php artisan migrate --force
+    php artisan storage:link          # first deploy only
+    php artisan optimize              # caches config, routes, views, events
+    ```
+3. On the first deploy, seed only what the site needs (not the demo catalogue), then change the admin password:
+    ```bash
+    php artisan db:seed --class=AdminUserSeeder --force
+    php artisan db:seed --class=PageSettingSeeder --force
+    php artisan db:seed --class=SystemSettingSeeder --force
+    ```
+4. Make `storage/` and `bootstrap/cache/` writable by the web server.
+5. Register the payment webhooks and add `https://your-domain.com/auth/google/callback` in Google Cloud Console.
+
+After any `.env` change on the server, run `php artisan optimize` again. Cached config ignores `.env`.
+
+No cron job or queue worker is needed at the moment: nothing is queued and there are no scheduled tasks.
+
+## Project structure
+
+```
+app/Http/Controllers         storefront controllers (Admin/, Auth/, Payments/ subfolders)
+app/Services                 business logic - controllers stay thin
+  CartService                cart, coupons, shipping, totals, guest-cart merge
+  WishlistService            wishlist toggle and guest merge
+  OrderService               order placement (transaction + row locks)
+  AdminOrderService          status workflow, stock restore, tracking, emails
+  DashboardService           admin report queries
+  TransactionHistoryService  payments + COD in one list
+  ExportService              CSV / PDF downloads
+  Payments/                  one gateway class per provider + PaymentService
+config/services.php          third-party keys and API URLs
+.env.example                 the env template for every environment
+```
+
+## Useful commands
+
+```bash
+php artisan test                  # run the test suite
+php artisan about                 # environment, debug mode, cache status
+php artisan optimize:clear        # clear all caches (local)
+composer audit                    # check dependencies for security advisories
+```
+
+BY Vivek Singh

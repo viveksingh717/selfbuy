@@ -1,37 +1,181 @@
-For Category Table:
-category name
-slug
-description
-image
-status
-popular
-meta tile
-meta description
-meta keyword
+SELFBUY - PROJECT NOTES
+Last updated: 02 Oct 2026 (Laravel 12.69, PHP 8.4 local)
 
-Product Table:
-id
-product_name
-product_slug
-description
-short_description
-additional_description
-selling_price
-original_price
-product_image
-qty
-sku
-category_id
-subcategory_id
-brand
-tax
-coupon
-status
-is_featured
-is_available
-warranty
-meta_title
-meta_description
+=====================================================================
+1. DATABASE TABLES (actual columns, created_at/updated_at left out)
+=====================================================================
 
-Product_Attribute:
+categories:
+id, category_name, category_slug, description, category_image,
+is_featured, show_on_home, home_order, status, meta_title, meta_description
 
+sub_categories:
+id, subcategory_name, subcategory_slug, subcategory_image, category_id, status
+
+brands:
+id, brand_name, brand_slug, brand_logo, status
+
+product_models:
+id, product_name, product_slug, short_description, description,
+additional_description, category_id, sub_category_id, brand_id,
+original_price, selling_price, cost_price, discount, tax_id, coupon_id,
+sku, qty, low_stock_alert, stock_status, product_image, status,
+is_featured, is_trending, meta_title, meta_description, deleted_at (soft delete)
+
+product_attributes (variants = colour + size):
+id, product_id, color_id, size_id, sku_variant, stock, extra_price, status
+-> If a product has variants, stock lives HERE (attribute.stock).
+   If not, stock lives on product_models.qty.
+
+product_gallery_images:
+id, product_id, image_path, product_images, sort_order
+
+carts:
+id, user_id, session_id, product_id, product_attribute_id, color_id,
+size_id, qty, unit_price, extra_price
+
+wishlists:
+id, user_id, session_id, product_id, product_attribute_id, color_id, size_id
+
+orders:
+id, order_number, user_id, session_id, first_name, last_name, email, phone,
+address_line1, address_line2, city, state, postal_code, country, order_notes,
+subtotal, discount, coupon_code, shipping_cost, shipping_method, total,
+payment_method, payment_status, order_status, tracking_courier,
+tracking_number, tracking_url, shipped_at, delivered_at, cancelled_at,
+cancel_reason, stock_restored
+
+order_items:
+id, order_id, product_id, product_attribute_id, product_name, variant_label,
+qty, unit_price, extra_price, line_total
+-> name/price are a SNAPSHOT, so old orders stay correct if a product changes.
+
+order_histories (timeline on track order + admin):
+id, order_id, type, from_value, to_value, note, admin_id, customer_notified
+
+payments (online gateways only, COD has no row here):
+id, order_id, user_id, session_id, gateway, gateway_order_id,
+gateway_payment_id, gateway_signature, amount, currency, status,
+billing_data, order_snapshot, meta, failure_reason, paid_at
+
+coupon_models:
+id, coupon_name, coupon_code, description, status, discount_value,
+min_order_amount, max_discount_amount, start_date, discount_type,
+expiry_date, usage_limit, used_count, per_user_limit, applicable_to
+
+reviews:
+id, product_id, user_id, rating, title, comment, is_verified_purchase
+
+review_votes:
+id, review_id, user_id, session_id, is_helpful
+
+otps:
+id, user_id, purpose, otp_hash, attempts, expires_at, consumed_at
+
+users:
+id, name, email, email_verified_at, password, phone_number, address,
+address_line1, address_line2, city, state, postal_code, country,
+profile_photo, status, role_type, terms, is_verified, remember_token,
+welcome_coupon_id, last_seen_at
+
+=====================================================================
+2. HOW THE MAIN FEATURES WORK
+=====================================================================
+
+Pattern everywhere: Route -> Controller (validate + respond) -> Service (logic) -> Model.
+Services return ['status' => bool, 'message' => ..., ...].
+
+Cart (CartService):
+- Owner = user_id if logged in, else session_id (guests can shop).
+- Same product + variant again -> qty increases (firstOrNew), capped at stock.
+- Product with variants must have one selected.
+- Coupon code + shipping method are kept in the session.
+- Coupon is re-checked every time totals are calculated.
+- Shipping rates: free 0 / standard 10 / express 20 (CartService::SHIPPING_RATES).
+
+Wishlist (WishlistService):
+- Same owner rule as cart. One click = toggle (add or remove).
+- Variant optional.
+
+Guest -> login merge:
+- On OTP login (OtpController::verify) the guest cart + wishlist move to the user.
+- Guest orders are linked to the account by email (safe because OTP proved the email).
+
+Placing an order (OrderService::createOrder):
+- DB::transaction + lockForUpdate() on stock rows -> no overselling when two
+  people buy the last item at the same time. Any failure = full rollback.
+- Creates order + items, reduces stock, increases coupon used_count, clears cart.
+- Confirmation email is sent AFTER the transaction (mail failure never undoes an order).
+
+Online payments (PaymentService::completePayment):
+- Browser redirect AND webhook both confirm the payment.
+- Cache lock + "order already exists?" check -> exactly one order is created.
+- Webhooks are trusted by signature, so they are CSRF-exempt (bootstrap/app.php).
+
+Order status (Order::NEXT_STATUSES):
+  pending -> processing -> shipped -> delivered
+  pending / processing -> cancelled
+- delivered + COD -> payment marked paid automatically.
+- cancelled -> stock + coupon use given back once (stock_restored flag).
+
+Exports (ExportService):
+- CSV is streamed + chunk(500) -> big exports use little memory.
+  UTF-8 BOM at the start so Excel shows the rupee sign correctly.
+- PDF via dompdf, max 1000 rows (PDF_ROW_LIMIT) - use CSV for more.
+
+=====================================================================
+3. ENVIRONMENT / PRODUCTION NOTES
+=====================================================================
+
+- Only ONE env template: .env.example. Local values; every line that must
+  change on the server has a "# PRODUCTION:" comment above it.
+- AppServiceProvider::configureEnvironment() = the place for local vs live behaviour:
+    production -> https:// links forced, migrate:fresh / db:wipe blocked.
+- APP_DEBUG is NOT automatic. Must be false on the server.
+- Mail must be real SMTP on the server - login OTP is sent by email.
+- After any .env change on the server: php artisan optimize
+- Telescope (dev package) only loads when APP_ENV=local.
+- Do NOT run plain "db:seed" on production (demo data + default admin
+  password). Seed only AdminUserSeeder, PageSettingSeeder, SystemSettingSeeder,
+  then change the admin password.
+
+Payment URLs:
+- In config/services.php (not hardcoded in gateway classes).
+- Still TEST/SANDBOX mode. To go live: live keys + PAYPAL_SANDBOX=false
+  + INSTAMOJO_SANDBOX=false. No code change.
+- Re-create webhooks with the live domain: /webhooks/{razorpay|stripe|paypal|instamojo}
+
+Bugsnag (error monitoring):
+- Server .env: LOG_STACK=daily,bugsnag + BUGSNAG_API_KEY
+- Reports only from production/staging, only error level and above.
+- Locally it never sends (stage = local).
+
+LogDNAService: not used anywhere. Safe to delete later.
+
+=====================================================================
+4. CHANGE LOG
+=====================================================================
+
+02 Oct 2026
+- Upgraded Laravel 11.56 -> 12.69 (fixes 4 security advisories, incl. a
+  high-severity CRLF injection in the email validation rule).
+  yajra/laravel-datatables 11 -> 12.
+- Added Bugsnag.
+- Production prep: env switching, payment/API URLs moved to config,
+  Telescope local-only, .env.example production notes, committed APP_KEY removed.
+
+=====================================================================
+5. TO DO / KNOWN ITEMS
+=====================================================================
+
+- Test after upgrade: OTP login, COD + one test-gateway order,
+  admin status change, invoice + PDF/CSV export.
+- If hosted behind Cloudflare / a load balancer: add
+  $middleware->trustProxies(at: '*') in bootstrap/app.php.
+- ExportService line 27: fputcsv() PHP 8.4 deprecation notice (harmless).
+- resources/views/emails/templates/test_email.blade.php has a hardcoded
+  http://selfbuy.com link (template not used).
+- SMS_DRIVER=log writes OTPs to the log file; switch to msg91 when keys are ready.
+- Test suite has only 2 tests - add feature tests for cart / checkout.
+
+By Vivek Singh
