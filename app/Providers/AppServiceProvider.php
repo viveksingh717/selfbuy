@@ -18,9 +18,11 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -32,7 +34,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Telescope is a dev-only package (require-dev), so it isn't installed on a
+        // `composer install --no-dev` production server - only register it locally.
+        if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
+            $this->app->register(\Laravel\Telescope\TelescopeServiceProvider::class);
+            $this->app->register(TelescopeServiceProvider::class);
+        }
     }
 
     /**
@@ -40,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureEnvironment();
         $this->configureRateLimiting();
 
         // Storefront cache (menus + home blocks): drop it whenever the catalogue changes in admin.
@@ -127,6 +135,22 @@ class AppServiceProvider extends ServiceProvider
                 'data'  => ['order_id' => $order->id, 'order_number' => $order->order_number],
             ]);
         });
+    }
+
+    /**
+     * Per-environment behaviour (APP_ENV = local / staging / production).
+     * Anything that should differ between your machine and the live site goes here.
+     */
+    private function configureEnvironment(): void
+    {
+        // Generate https:// links even when the server sits behind a proxy / load
+        // balancer that talks plain HTTP to PHP (payment return URLs, emails, invoices).
+        if (config('app.force_https')) {
+            URL::forceScheme('https');
+        }
+
+        // Block migrate:fresh / migrate:refresh / migrate:reset / db:wipe on the live database.
+        DB::prohibitDestructiveCommands($this->app->isProduction());
     }
 
     /**

@@ -73,6 +73,11 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Errors to Bugsnag - add it to LOG_STACK (e.g. LOG_STACK=daily,bugsnag).
+        'bugsnag' => [
+            'driver' => 'bugsnag',
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

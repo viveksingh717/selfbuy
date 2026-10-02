@@ -39,7 +39,7 @@ class SmsService
     private function sendViaMsg91(string $phoneNumber, string $otp): bool
     {
         try {
-            $response = Http::asForm()->post('https://control.msg91.com/api/v5/otp', [
+            $response = Http::asForm()->post(config('services.msg91.otp_url'), [
                 'authkey' => config('services.msg91.auth_key'),
                 'template_id' => config('services.msg91.template_id'),
                 'mobile' => $phoneNumber,
@@ -84,7 +84,7 @@ class SmsService
 
         try {
             $response = Http::withHeaders(['authkey' => config('services.msg91.auth_key')])
-                ->post('https://control.msg91.com/api/v5/flow/', [
+                ->post(config('services.msg91.flow_url'), [
                     'template_id' => $templateId,
                     'sender' => config('services.msg91.sender_id'),
                     'short_url' => '0',

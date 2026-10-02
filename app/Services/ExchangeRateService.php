@@ -21,7 +21,7 @@ class ExchangeRateService
     {
         return Cache::remember('exchange_rate_inr_usd', 3600, function () {
             try {
-                $response = Http::timeout(5)->get('https://open.er-api.com/v6/latest/INR')->throw();
+                $response = Http::timeout(5)->get(config('services.exchange_rate.url'))->throw();
                 $rate = (float) $response->json('rates.USD');
 
                 if ($rate > 0) {

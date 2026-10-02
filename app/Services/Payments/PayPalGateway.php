@@ -25,8 +25,8 @@ class PayPalGateway implements PaymentGatewayInterface
     public function __construct()
     {
         $this->baseUrl = config('services.paypal.sandbox', true)
-            ? 'https://api-m.sandbox.paypal.com'
-            : 'https://api-m.paypal.com';
+            ? config('services.paypal.sandbox_url')
+            : config('services.paypal.live_url');
     }
 
     public function name(): string

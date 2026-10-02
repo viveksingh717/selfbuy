@@ -50,6 +50,13 @@ return [
         'template_id' => env('MSG91_OTP_TEMPLATE_ID'),
         'transactional_template_id' => env('MSG91_TRANSACTIONAL_TEMPLATE_ID'),
         'sender_id' => env('MSG91_SENDER_ID'),
+        'otp_url' => env('MSG91_OTP_URL', 'https://control.msg91.com/api/v5/otp'),
+        'flow_url' => env('MSG91_FLOW_URL', 'https://control.msg91.com/api/v5/flow/'),
+    ],
+
+    'logdna' => [
+        'ingestion_key' => env('LOGDNA_INGESTION_KEY'),
+        'url' => env('LOGDNA_URL', 'https://logs.logdna.com/logs/ingest'),
     ],
 
     'razorpay' => [
@@ -70,9 +77,13 @@ return [
         'merchant_id' => env('PAYPAL_MERCHANT_ID'),
         'sandbox' => env('PAYPAL_SANDBOX', true),
         'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+        // PAYPAL_SANDBOX picks which of these PayPalGateway talks to.
+        'sandbox_url' => env('PAYPAL_SANDBOX_API_URL', 'https://api-m.sandbox.paypal.com'),
+        'live_url' => env('PAYPAL_LIVE_API_URL', 'https://api-m.paypal.com'),
     ],
 
     'exchange_rate' => [
+        'url' => env('EXCHANGE_RATE_URL', 'https://open.er-api.com/v6/latest/INR'),
         'inr_usd_fallback' => env('EXCHANGE_RATE_INR_USD_FALLBACK', 0.012),
     ],
 
@@ -81,6 +92,9 @@ return [
         'auth_token' => env('INSTAMOJO_AUTH_TOKEN'),
         'salt' => env('INSTAMOJO_SALT'),
         'sandbox' => env('INSTAMOJO_SANDBOX', true),
+        // INSTAMOJO_SANDBOX picks which of these InstamojoGateway talks to.
+        'sandbox_url' => env('INSTAMOJO_SANDBOX_API_URL', 'https://test.instamojo.com/api/1.1'),
+        'live_url' => env('INSTAMOJO_LIVE_API_URL', 'https://www.instamojo.com/api/1.1'),
     ],
 
 ];

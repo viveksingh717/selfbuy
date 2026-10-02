@@ -14,9 +14,9 @@ class LogDNAService
 
     public function __construct()
     {
-        $this->ingestionKey = env('LOGDNA_INGESTION_KEY');
+        $this->ingestionKey = (string) config('services.logdna.ingestion_key');
         $this->host = gethostname();
-        $this->url = 'https://logs.logdna.com/logs/ingest';
+        $this->url = config('services.logdna.url');
     }
 
     /**

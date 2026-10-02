@@ -15,8 +15,8 @@ class InstamojoGateway implements PaymentGatewayInterface
     public function __construct()
     {
         $this->baseUrl = config('services.instamojo.sandbox', true)
-            ? 'https://test.instamojo.com/api/1.1'
-            : 'https://www.instamojo.com/api/1.1';
+            ? config('services.instamojo.sandbox_url')
+            : config('services.instamojo.live_url');
     }
 
     public function name(): string
