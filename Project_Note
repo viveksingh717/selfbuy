@@ -185,6 +185,7 @@ LogDNAService: not used anywhere. Safe to delete later.
 Goal: host temporarily NOW for showcase, move to AWS LATER (still learning AWS).
 
 Phase 1 - Temporary hosting (showcase):
+- CHOSEN: Hostinger (shared/cloud plan with SSH).
 - Use a plain Ubuntu server: Oracle Cloud Always Free (free) or a
   $4-6/month VPS (Hetzner / DigitalOcean). Hostinger shared = easiest fallback.
 - Avoid InfinityFree-type hosts: bot wall blocks webhooks + API, no SSH.
@@ -198,7 +199,8 @@ Phase 1 - Temporary hosting (showcase):
   QUEUE_CONNECTION=database + cron for "schedule:run" (or sync).
 
 Phase 2 - AWS (later) - what maps to what:
-- Server          -> EC2 (t3.micro / t4g.micro, free tier for 12 months)
+- Server          -> EC2 (t3.micro / t4g.micro; new accounts since Jul 2025
+                     get credits on a 6-month Free plan, not 12 months)
 - MySQL           -> RDS MySQL (free tier) or MySQL on the same EC2 at first
 - Uploaded images -> S3 (+ CloudFront later)
 - Email (OTP)     -> SES (needs "production access" request to email anyone)
