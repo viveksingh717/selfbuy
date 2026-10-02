@@ -178,4 +178,48 @@ LogDNAService: not used anywhere. Safe to delete later.
 - SMS_DRIVER=log writes OTPs to the log file; switch to msg91 when keys are ready.
 - Test suite has only 2 tests - add feature tests for cart / checkout.
 
+=====================================================================
+6. DEPLOYMENT PLAN (added 02 Oct 2026)
+=====================================================================
+
+Goal: host temporarily NOW for showcase, move to AWS LATER (still learning AWS).
+
+Phase 1 - Temporary hosting (showcase):
+- Use a plain Ubuntu server: Oracle Cloud Always Free (free) or a
+  $4-6/month VPS (Hetzner / DigitalOcean). Hostinger shared = easiest fallback.
+- Avoid InfinityFree-type hosts: bot wall blocks webhooks + API, no SSH.
+- Stack: Ubuntu + Nginx + PHP 8.4-FPM + MySQL 8 + Composer + Certbot (SSL).
+  Same stack as an EC2 server later -> everything learned here carries over.
+- Deploy from GitHub (git clone / git pull), never upload .env through git.
+- Keep payment gateways in TEST mode (visitors can use test cards).
+- Keep SMS_DRIVER=log (SMS costs money), OTP via email SMTP.
+- Demo admin account in README, ADMIN_REGISTRATION_ENABLED=false.
+- Server .env: APP_ENV=production, APP_DEBUG=false, real APP_URL,
+  QUEUE_CONNECTION=database + cron for "schedule:run" (or sync).
+
+Phase 2 - AWS (later) - what maps to what:
+- Server          -> EC2 (t3.micro / t4g.micro, free tier for 12 months)
+- MySQL           -> RDS MySQL (free tier) or MySQL on the same EC2 at first
+- Uploaded images -> S3 (+ CloudFront later)
+- Email (OTP)     -> SES (needs "production access" request to email anyone)
+- Domain / SSL    -> Route 53 + ACM (or Certbot on EC2)
+- Secrets         -> .env on server first, later SSM Parameter Store
+- Errors / logs   -> Bugsnag already set up, CloudWatch optional
+- Set AWS billing alerts (Budgets) on day 1 so free tier never surprises.
+
+Before moving to S3:
+- Uploads use Storage::disk('public') hardcoded (FileUploadService,
+  HomeSettingService, SystemSettingService, PageSettingService).
+  Plan: point the 'public' disk to S3 in config/filesystems.php OR make the
+  disk name come from .env. Copy storage/app/public/* to the S3 bucket.
+- Check views use Storage::url() (not asset('storage/...')) so image URLs
+  switch to S3 automatically.
+
+Migration steps (Phase 1 -> AWS):
+- mysqldump from temp server -> import to RDS/EC2.
+- Copy uploads to S3, update .env (DB_*, AWS_*, MAIL_* for SES, APP_URL).
+- Update webhook URLs in Razorpay/Stripe/PayPal/Instamojo + Google OAuth
+  redirect URI to the new domain.
+- php artisan optimize, test checkout + OTP + image upload, then switch DNS.
+
 By Vivek Singh
