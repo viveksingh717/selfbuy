@@ -3,6 +3,11 @@
 @section('subTitle', 'About Us')
 
 @section('style')
+    <style>
+        /* Team photos are uploaded in any size - show them all in the same 3:4 frame. */
+        .member-media { aspect-ratio: 3 / 4; overflow: hidden; }
+        .member-media img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+    </style>
 @endsection
 
 @section('content')
