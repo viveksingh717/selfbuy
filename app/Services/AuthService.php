@@ -74,6 +74,13 @@ class AuthService {
                 return ['success' => false, 'message' => 'An account with this email already exists. Please sign in instead.'];
             }
 
+            $phone = User::normalizePhone($data['phone_number'] ?? null);
+            if ($phone && User::where('phone_number', $phone)->exists()) {
+                Log::warning('Customer registration: phone already exists', ['email' => $data['email']]);
+
+                return ['success' => false, 'message' => 'An account with this phone number already exists. Please sign in instead.'];
+            }
+
             $user = User::create([
                 'name'         => $data['name'],
                 'email'        => $data['email'],

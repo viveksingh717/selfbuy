@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\CartService;
 use App\Services\CheckoutAccountService;
@@ -69,6 +70,20 @@ class CheckoutController extends Controller
                 $isGuest ? 'required_if:create_account,1' : null,
             ]),
         ]);
+
+        // A new account can't reuse an email or phone number that is already registered.
+        $validator->after(function ($validator) use ($request, $isGuest) {
+            if (! $isGuest || ! $request->boolean('create_account')) {
+                return;
+            }
+            if (User::where('email', $request->input('email'))->exists()) {
+                $validator->errors()->add('email', 'An account with this email already exists. Please sign in, or untick "Create an account".');
+            }
+            $phone = User::normalizePhone($request->input('phone'));
+            if ($phone && User::where('phone_number', $phone)->exists()) {
+                $validator->errors()->add('phone', 'An account with this phone number already exists. Please sign in, or untick "Create an account".');
+            }
+        });
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput($request->except('account_password'));

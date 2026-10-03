@@ -65,6 +65,23 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Phone numbers are stored without formatting so the unique index catches
+     * "98765 43210" and "9876543210" as the same number. Blank becomes null
+     * (many null rows are allowed by the unique index, many '' rows are not).
+     */
+    public static function normalizePhone(?string $phone): ?string
+    {
+        $phone = preg_replace('/[\s\-().]/', '', (string) $phone);
+
+        return $phone === '' ? null : $phone;
+    }
+
+    public function setPhoneNumberAttribute(?string $value): void
+    {
+        $this->attributes['phone_number'] = static::normalizePhone($value);
+    }
+
     /** Full URL of the uploaded profile photo, or null. */
     public function getAvatarUrlAttribute(): ?string
     {

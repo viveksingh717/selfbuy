@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,10 +29,13 @@ class ProfileController extends Controller
     {
         $admin = Auth::guard('admin')->user();
 
+        // Unique check runs on the stored (unformatted) form of the number.
+        $request->merge(['phone_number' => User::normalizePhone($request->input('phone_number'))]);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:150'],
             'email'         => ['required', 'email:rfc,filter', 'max:190', Rule::unique('users', 'email')->ignore($admin->id)],
-            'phone_number'  => ['nullable', 'string', 'max:30'],
+            'phone_number'  => ['nullable', 'string', 'max:20', 'regex:/^\+?[0-9]{7,15}$/', Rule::unique('users', 'phone_number')->ignore($admin->id)],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_line2' => ['nullable', 'string', 'max:255'],
             'city'          => ['nullable', 'string', 'max:100'],

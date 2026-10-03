@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\User;
 use App\Services\ResponseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,10 +45,17 @@ class AccountController extends Controller
     {
         $user = Auth::guard('web')->user();
 
+        // Unique check runs on the stored (unformatted) form of the number.
+        $request->merge(['phone_number' => User::normalizePhone($request->input('phone_number'))]);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
             'email' => 'required|email:rfc,filter|max:255|unique:users,email,'.$user->id,
-            'phone_number' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s()]{7,20}$/'],
+            'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+?[0-9]{7,15}$/', 'unique:users,phone_number,'.$user->id],
+        ], [
+            'email.unique'        => 'This email is already used by another account.',
+            'phone_number.unique' => 'This phone number is already used by another account.',
+            'phone_number.regex'  => 'Please enter a valid phone number.',
         ]);
 
         if ($validator->fails()) {

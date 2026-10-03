@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\AuthService;
 use App\Services\OtpService;
 use App\Services\ResponseService;
@@ -20,14 +21,19 @@ class RegisterController extends Controller
 
     public function store(Request $request, ResponseService $rs)
     {
+        // Unique check runs on the stored (unformatted) form of the number.
+        $request->merge(['phone_number' => User::normalizePhone($request->input('phone_number'))]);
+
         $validator = Validator::make($request->all(), [
             'name'         => 'required|string|max:100',
             'email'        => 'required|email:rfc,filter|max:255|unique:users,email',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => ['required', 'string', 'max:20', 'regex:/^\+?[0-9]{7,15}$/', 'unique:users,phone_number'],
             'password'     => 'required|string|min:8',
             'terms'        => 'required|accepted',
         ], [
-            'email.unique'   => 'An account with this email already exists. Please sign in instead.',
+            'email.unique'        => 'An account with this email already exists. Please sign in instead.',
+            'phone_number.unique' => 'An account with this phone number already exists. Please sign in instead.',
+            'phone_number.regex'  => 'Please enter a valid phone number.',
             'terms.required' => 'You must agree to the privacy policy.',
             'terms.accepted' => 'You must agree to the privacy policy.',
         ]);

@@ -35,6 +35,13 @@ class CheckoutAccountService
             return;
         }
 
+        $phone = User::normalizePhone($billingData['phone'] ?? null);
+        if ($phone && User::where('phone_number', $phone)->exists()) {
+            Log::info('Checkout: create-account skipped, phone already registered', ['email' => $billingData['email']]);
+
+            return;
+        }
+
         $credentials = [];
         if (isset($billingData['account_password_hash'])) {
             $credentials['password_hash'] = $billingData['account_password_hash'];

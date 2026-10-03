@@ -14,39 +14,30 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        
+        // The password comes from .env, never from this file - the repo may be public.
+        $password = env('ADMIN_SEED_PASSWORD');
+        if (! $password || strlen($password) < 8) {
+            $this->command?->error('Set ADMIN_SEED_PASSWORD in .env (at least 12 characters) before running AdminUserSeeder.');
+
+            return;
+        }
+
         User::updateOrCreate(
             ['email' => 'viveksmacbook07@gmail.com'],
             [
                 'name' => 'Vivek Singh',
-                'password' => Hash::make('password'),
-                'role_type' => 1
+                'password' => Hash::make($password),
+                'role_type' => 1, // 1 = admin, 0 = customer
             ]
         );
 
         User::updateOrCreate(
-            ['email' => 'vs4092433@gmail.com'],
+            ['email' => 'vs4092344@gmail.com'],
             [
                 'name' => 'Admin Ruler',
-                'password' => Hash::make('password'),
-                'role_type' => 2
+                'password' => Hash::make($password),
+                'role_type' => 1,
             ]
         );
-
-
-        // User::insert([
-        //     [
-        //         'name' => 'Vivek Singh',
-        //         'email' => 'admin@gmail.com',
-        //         'password' => bcrypt('123456'),
-        //         'role_type' => 1,
-        //     ],
-        //     [
-        //         'name' => 'Rohan Sharma',
-        //         'email' => 'rohit@gmail.com',
-        //         'password' => bcrypt('123456'),
-        //         'role_type' => 2,
-        //     ]
-        // ]);
     }
 }

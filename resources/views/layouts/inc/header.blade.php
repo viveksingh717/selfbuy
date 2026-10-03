@@ -2,6 +2,7 @@
     <div class="header-top">
         <div class="container">
             <div class="header-left">
+                {{-- Currency / language switchers hidden - the site is INR + English only for now.
                 <div class="header-dropdown">
                     <a href="#">INR</a>
                     <div class="header-menu">
@@ -21,6 +22,7 @@
                         </ul>
                     </div><!-- End .header-menu -->
                 </div><!-- End .header-dropdown -->
+                --}}
             </div><!-- End .header-left -->
 
             <div class="header-right">

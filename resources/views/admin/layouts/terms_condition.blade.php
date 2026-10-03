@@ -142,7 +142,7 @@
 
                         <p>
                             <strong>Email:</strong> vivek.singh57@ymail.com<br>
-                            <strong>Website:</strong> www.selfbuy.com
+                            <strong>Website:</strong> www.selfbuy.live
                         </p>
 
                     </div>
