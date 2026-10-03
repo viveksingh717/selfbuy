@@ -119,6 +119,7 @@
             <script src="{{ asset('admin_assets/bundles/lib.vendor.bundle.js') }}"></script>
             <script src="{{ asset('admin_assets/js/core.js') }}"></script>
             <script src="{{ asset('admin_assets/js/admin-settings.js') }}"></script>
+            <script src="{{ asset('admin_assets/js/form-loading.js') }}"></script>
 
             <!-- 3. Summernote -->
             <script src="{{ asset('admin_assets/bundles/summernote.bundle.js') }}"></script>

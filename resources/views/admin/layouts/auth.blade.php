@@ -95,6 +95,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="{{ asset('admin_assets/bundles/lib.vendor.bundle.js') }}"></script>
     <script src="{{ asset('admin_assets/js/core.js') }}"></script>
+    <script src="{{ asset('admin_assets/js/form-loading.js') }}"></script>
 
     @yield('script')
 </body>
