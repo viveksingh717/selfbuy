@@ -31,7 +31,9 @@
                             <li><a href="tel:+919004069694"><i class="icon-phone"></i>Call: +91 90040 69694</a></li>
                             <li><a href="{{ route('about') }}"><i class="icon-info-circle"></i>About Us</a></li>
                             <li><a href="{{ route('contact') }}"><i class="icon-envelope"></i>Contact Us</a></li>
+                            {{-- Hidden until the blog has real posts - the /blog page still shows template content.
                             <li><a href="{{ route('blog') }}"><i class="icon-blog"></i>Blog</a></li>
+                            --}}
                             @guest
                                 <li><a href="#signin-modal" data-toggle="modal"><i class="icon-user"></i>Login</a></li>
                                 <li><a href="#signin-modal" data-toggle="modal" data-auth-tab="register-tab"><i class="icon-user"></i>Register</a></li>

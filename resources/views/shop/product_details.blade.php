@@ -13,7 +13,7 @@
 @php
     $mainImageUrl = $product->product_image
         ? asset('storage/products/' . $product->product_image)
-        : asset('assets/images/products/product-1.jpg');
+        : asset('assets/images/products/no-image.svg');
 
     $galleryImages = collect([
         (object) [
@@ -428,7 +428,7 @@
                                         <span class="product-label label-out">Out of Stock</span>
                                     @endif
                                     <a href="{{ route('product.details', $relatedProduct->product_slug) }}">
-                                        <img src="{{ $relatedProduct->product_image ? asset('storage/products/thumb/' . $relatedProduct->product_image) : asset('assets/images/products/product-1.jpg') }}"
+                                        <img src="{{ $relatedProduct->product_image ? asset('storage/products/thumb/' . $relatedProduct->product_image) : asset('assets/images/products/no-image.svg') }}"
                                             alt="{{ $relatedProduct->product_name }}" class="product-image">
                                     </a>
 

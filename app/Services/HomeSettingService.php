@@ -41,6 +41,39 @@ class HomeSettingService
                 ],
             ],
 
+            'side_banners' => [
+                'label'  => 'Side Banners',
+                'fields' => [
+                    'side_banner_1_image'       => ['type' => 'file',     'label' => 'Top Banner Image', 'accept' => 'image/*',
+                        'placeholder' => 'assets/images/banners/home/intro/banner-1.jpg',
+                        'help' => 'Shown beside the carousel. Recommended size 376 x 245 px.'],
+                    'side_banner_1_subtitle'    => ['type' => 'text',     'label' => 'Top Banner Subtitle',    'default' => 'Clearance'],
+                    'side_banner_1_title'       => ['type' => 'textarea', 'label' => 'Top Banner Title',       'default' => "Chairs & Chaises\nUp to 40% off",
+                        'help' => 'Press Enter for a line break.'],
+                    'side_banner_1_button_text' => ['type' => 'text',     'label' => 'Top Banner Button Name', 'default' => 'Shop Now'],
+                    'side_banner_1_button_link' => ['type' => 'text',     'label' => 'Top Banner Button Link', 'default' => '/products'],
+
+                    'side_banner_2_image'       => ['type' => 'file',     'label' => 'Bottom Banner Image', 'accept' => 'image/*',
+                        'placeholder' => 'assets/images/banners/home/intro/banner-2.jpg',
+                        'help' => 'Shown beside the carousel. Recommended size 376 x 245 px.'],
+                    'side_banner_2_subtitle'    => ['type' => 'text',     'label' => 'Bottom Banner Subtitle',    'default' => 'New in'],
+                    'side_banner_2_title'       => ['type' => 'textarea', 'label' => 'Bottom Banner Title',       'default' => "Best Lighting\nCollection",
+                        'help' => 'Press Enter for a line break.'],
+                    'side_banner_2_button_text' => ['type' => 'text',     'label' => 'Bottom Banner Button Name', 'default' => 'Discover Now'],
+                    'side_banner_2_button_link' => ['type' => 'text',     'label' => 'Bottom Banner Button Link', 'default' => '/products'],
+                ],
+            ],
+
+            'about_page' => [
+                'label'  => 'About Page',
+                'fields' => [
+                    'about_image_front' => ['type' => 'file', 'label' => 'About Image (front)', 'accept' => 'image/*',
+                        'placeholder' => 'assets/images/about/img-1.jpg'],
+                    'about_image_back'  => ['type' => 'file', 'label' => 'About Image (back)',  'accept' => 'image/*',
+                        'placeholder' => 'assets/images/about/img-2.jpg'],
+                ],
+            ],
+
             'signup_offer' => [
                 'label'  => 'Sign Up Offer',
                 'fields' => [

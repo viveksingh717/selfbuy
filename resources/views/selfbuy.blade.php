@@ -45,7 +45,7 @@
                                         @endif
 
                                         @if ($slide->button_text)
-                                            <a href="{{ home_link($slide->button_link) }}" class="btn btn-outline-white">
+                                            <a href="{{ home_link($slide->button_link, route('products')) }}" class="btn btn-outline-white">
                                                 <span>{{ $slide->button_text }}</span>
                                                 <i class="icon-long-arrow-right"></i>
                                             </a>
@@ -61,41 +61,34 @@
                 <div class="col-lg-4">
                     <div class="intro-banners">
                         <div class="row row-sm">
-                            <div class="col-md-6 col-lg-12">
-                                <div class="banner banner-display">
-                                    <a href="#">
-                                        <img src="{{ asset('assets/images/banners/home/intro/banner-1.jpg') }}"
-                                            alt="Banner">
-                                    </a>
+                            {{-- Managed from Admin > Home Settings > Side Banners. --}}
+                            @foreach ([1, 2] as $n)
+                                @php
+                                    $bannerUrl   = home_link(home_setting("side_banner_{$n}_button_link"), route('products'));
+                                    $bannerTitle = home_setting("side_banner_{$n}_title");
+                                @endphp
+                                <div class="col-md-6 col-lg-12">
+                                    <div class="banner banner-display {{ $loop->last ? 'mb-0' : '' }}">
+                                        <a href="{{ $bannerUrl }}">
+                                            <img src="{{ home_asset("side_banner_{$n}_image") }}"
+                                                alt="{{ $bannerTitle ? strtok($bannerTitle, "\n") : 'Banner' }}">
+                                        </a>
 
-                                    <div class="banner-content">
-                                        <h4 class="banner-subtitle text-darkwhite"><a href="#">Clearence</a></h4>
-                                        <!-- End .banner-subtitle -->
-                                        <h3 class="banner-title text-white"><a href="#">Chairs & Chaises
-                                                <br>Up to 40% off</a></h3><!-- End .banner-title -->
-                                        <a href="#" class="btn btn-outline-white banner-link">Shop Now<i
-                                                class="icon-long-arrow-right"></i></a>
-                                    </div><!-- End .banner-content -->
-                                </div><!-- End .banner -->
-                            </div><!-- End .col-md-6 col-lg-12 -->
-
-                            <div class="col-md-6 col-lg-12">
-                                <div class="banner banner-display mb-0">
-                                    <a href="#">
-                                        <img src="{{ asset('assets/images/banners/home/intro/banner-2.jpg') }}"
-                                            alt="Banner">
-                                    </a>
-
-                                    <div class="banner-content">
-                                        <h4 class="banner-subtitle text-darkwhite"><a href="#">New
-                                                in</a></h4><!-- End .banner-subtitle -->
-                                        <h3 class="banner-title text-white"><a href="#">Best Lighting
-                                                <br>Collection</a></h3><!-- End .banner-title -->
-                                        <a href="#" class="btn btn-outline-white banner-link">Discover
-                                            Now<i class="icon-long-arrow-right"></i></a>
-                                    </div><!-- End .banner-content -->
-                                </div><!-- End .banner -->
-                            </div><!-- End .col-md-6 col-lg-12 -->
+                                        <div class="banner-content">
+                                            @if (home_setting("side_banner_{$n}_subtitle"))
+                                                <h4 class="banner-subtitle text-darkwhite"><a href="{{ $bannerUrl }}">{{ home_setting("side_banner_{$n}_subtitle") }}</a></h4>
+                                            @endif
+                                            @if ($bannerTitle)
+                                                <h3 class="banner-title text-white"><a href="{{ $bannerUrl }}">{!! nl2br(e($bannerTitle)) !!}</a></h3>
+                                            @endif
+                                            @if (home_setting("side_banner_{$n}_button_text"))
+                                                <a href="{{ $bannerUrl }}" class="btn btn-outline-white banner-link">{{ home_setting("side_banner_{$n}_button_text") }}<i
+                                                        class="icon-long-arrow-right"></i></a>
+                                            @endif
+                                        </div><!-- End .banner-content -->
+                                    </div><!-- End .banner -->
+                                </div><!-- End .col-md-6 col-lg-12 -->
+                            @endforeach
                         </div><!-- End .row row-sm -->
                     </div><!-- End .intro-banners -->
                 </div><!-- End .col-lg-4 -->

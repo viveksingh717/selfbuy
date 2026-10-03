@@ -51,16 +51,19 @@
                             <p class="lead text-primary mb-3">Founded in 2026 by Vivek Singh</p><!-- End .lead text-primary -->
                             <p class="mb-2">SelfBuy started with a simple idea: online shopping shouldn't feel like a gamble. Built from the ground up as a one-stop destination for quality products and a genuinely seamless experience, SelfBuy is designed and run independently — every part of it, from the catalog to checkout to customer support, built with the same goal in mind: shop smart, buy better.</p>
 
+                            {{-- Hidden until the blog has real posts - the /blog page still shows template content.
                             <a href="{{ route('blog') }}" class="btn btn-sm btn-minwidth btn-outline-primary-2">
                                 <span>VIEW OUR NEWS</span>
                                 <i class="icon-long-arrow-right"></i>
                             </a>
+                            --}}
                         </div><!-- End .col-lg-5 -->
 
                         <div class="col-lg-6 offset-lg-1">
+                            {{-- Managed from Admin > Home Settings > About Page. --}}
                             <div class="about-images">
-                                <img src="{{ asset('assets/images/about/img-1.jpg') }}" alt="SelfBuy" class="about-img-front">
-                                <img src="{{ asset('assets/images/about/img-2.jpg') }}" alt="SelfBuy" class="about-img-back">
+                                <img src="{{ home_asset('about_image_front') }}" alt="SelfBuy" class="about-img-front">
+                                <img src="{{ home_asset('about_image_back') }}" alt="SelfBuy" class="about-img-back">
                             </div><!-- End .about-images -->
                         </div><!-- End .col-lg-6 -->
                     </div><!-- End .row -->

@@ -104,7 +104,7 @@
                                             <input type="checkbox" class="custom-control-input" id="register-policy"
                                                 name="terms" value="1" required>
                                             <label class="custom-control-label" for="register-policy">I agree to
-                                                the <a href="#">privacy policy</a> *</label>
+                                                the <a href="{{ route('privacy_policy') }}" target="_blank" rel="noopener">privacy policy</a> *</label>
                                         </div><!-- End .custom-checkbox -->
 
                                         <button type="submit" class="btn btn-outline-primary-2" data-busy-text="CREATING ACCOUNT...">

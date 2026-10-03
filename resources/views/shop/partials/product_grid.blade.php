@@ -8,7 +8,7 @@
                             <span class="product-label label-out">Out of Stock</span>
                         @endif
                         <a href="{{ route('product.details', $product->product_slug) }}">
-                            <img src="{{ $product->product_image ? asset('storage/products/thumb/' . $product->product_image) : asset('assets/images/products/product-1.jpg') }}"
+                            <img src="{{ $product->product_image ? asset('storage/products/thumb/' . $product->product_image) : asset('assets/images/products/no-image.svg') }}"
                                 alt="{{ $product->product_name }}" class="product-image">
                         </a>
 

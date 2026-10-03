@@ -75,7 +75,8 @@ if (!function_exists('home_link')) {
     function home_link(?string $link, string $fallback = '#'): string
     {
         $link = trim((string) $link);
-        if ($link === '') {
+        // "#" is the placeholder saved by the admin forms - treat it as "no link".
+        if ($link === '' || $link === '#') {
             return $fallback;
         }
         if (preg_match('#^(https?:)?//|^(\#|mailto:|tel:)#i', $link)) {

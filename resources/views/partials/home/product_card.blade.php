@@ -10,7 +10,7 @@
         @endif
 
         <a href="{{ $productUrl }}">
-            <img src="{{ $product->product_image ? asset('storage/products/thumb/' . $product->product_image) : asset('assets/images/products/product-1.jpg') }}"
+            <img src="{{ $product->product_image ? asset('storage/products/thumb/' . $product->product_image) : asset('assets/images/products/no-image.svg') }}"
                 alt="{{ $product->product_name }}" class="product-image">
         </a>
 

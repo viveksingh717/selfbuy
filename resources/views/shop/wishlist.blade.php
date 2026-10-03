@@ -51,7 +51,7 @@
                                             <div class="product">
                                                 <figure class="product-media">
                                                     <a href="{{ $product ? route('product.details', $product->product_slug) : '#' }}">
-                                                        <img src="{{ $product && $product->product_image ? asset('storage/products/thumb/'.$product->product_image) : asset('assets/images/products/product-1.jpg') }}"
+                                                        <img src="{{ $product && $product->product_image ? asset('storage/products/thumb/'.$product->product_image) : asset('assets/images/products/no-image.svg') }}"
                                                             alt="{{ $product->product_name ?? 'Product' }}">
                                                     </a>
                                                 </figure>

@@ -17,7 +17,7 @@
             <figure class="product-image-container">
                 <a href="{{ $item->product ? route('product.details', $item->product->product_slug) : '#' }}"
                     class="product-image">
-                    <img src="{{ $item->product && $item->product->product_image ? asset('storage/products/thumb/' . $item->product->product_image) : asset('assets/images/products/product-1.jpg') }}"
+                    <img src="{{ $item->product && $item->product->product_image ? asset('storage/products/thumb/' . $item->product->product_image) : asset('assets/images/products/no-image.svg') }}"
                         alt="product">
                 </a>
             </figure>
