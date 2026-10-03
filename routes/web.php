@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminContactUsController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ColorController;
@@ -331,6 +332,8 @@ Route::prefix('admin')->group(function () {
         // Sysem Settings Routes (Protected by adminAuth middleware)
         Route::get('/settings', [SystemSettingController::class, 'settings'])->name('admin.settings');
         Route::post('/update_settings', [SystemSettingController::class, 'update_settings'])->name('admin.update_settings');
+        Route::post('/maintenance/enable', [MaintenanceController::class, 'enable'])->name('admin.maintenance.enable');
+        Route::post('/maintenance/disable', [MaintenanceController::class, 'disable'])->name('admin.maintenance.disable');
 
         Route::get('/home_settings', [SettingController::class, 'home_settings'])->name('admin.home_settings');
         Route::post('/update_home_settings', [SettingController::class, 'update_home_settings'])->name('admin.update_home_settings');

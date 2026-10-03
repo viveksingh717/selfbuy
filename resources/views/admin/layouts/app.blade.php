@@ -101,6 +101,14 @@
             @endif
             {{-- @include('admin.layouts.inc.header') --}}
 
+            {{-- Reminder on every admin page while the storefront is offline. --}}
+            @if (app()->isDownForMaintenance() && !Request::is('admin/settings'))
+                <div class="alert alert-warning mb-0 rounded-0 text-center py-2">
+                    <i class="fa fa-wrench mr-1"></i> The store is in <strong>maintenance mode</strong> - visitors can't see it.
+                    <a href="{{ route('admin.settings') }}" class="alert-link ml-1">Manage</a>
+                </div>
+            @endif
+
             {{-- Main Content --}}
             <div class="content-wrapper">
                 @yield('content')

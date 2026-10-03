@@ -12,6 +12,52 @@
 
 @section('content')
 
+    {{-- Store maintenance switch - its own forms, kept outside the settings form below. --}}
+    @php $maintenance = \App\Http\Controllers\Admin\MaintenanceController::status(); @endphp
+    <div class="section-body mt-3">
+        <div class="container-fluid">
+            <div class="card mb-0 {{ $maintenance['down'] ? 'border-warning' : '' }}">
+                <div class="card-body d-md-flex align-items-center justify-content-between">
+                    <div class="mb-3 mb-md-0">
+                        <h3 class="card-title mb-1">
+                            <i class="fa fa-wrench mr-1"></i> Maintenance Mode
+                            @if ($maintenance['down'])
+                                <span class="badge badge-warning ml-2">ON - store is offline</span>
+                            @else
+                                <span class="badge badge-success ml-2">OFF - store is live</span>
+                            @endif
+                        </h3>
+                        <div class="text-muted small">
+                            @if ($maintenance['down'])
+                                Visitors see the "We'll be back shortly" page. The admin panel and payments keep working.
+                                @if ($maintenance['preview_url'])
+                                    <br>Preview the store as a visitor:
+                                    <a href="{{ $maintenance['preview_url'] }}" target="_blank" rel="noopener">open private preview link</a>
+                                    <span class="text-muted">(works only in your browser, don't share it)</span>
+                                @endif
+                            @else
+                                Take the storefront offline while you update products or fix something. The admin panel stays available.
+                            @endif
+                        </div>
+                    </div>
+                    @if ($maintenance['down'])
+                        <form method="POST" action="{{ route('admin.maintenance.disable') }}"
+                            onsubmit="return confirm('Bring the store back online for everyone?');">
+                            @csrf
+                            <button type="submit" class="btn btn-success"><i class="fa fa-play mr-1"></i> Go Live</button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('admin.maintenance.enable') }}"
+                            onsubmit="return confirm('Take the store offline? Visitors will see the maintenance page until you click Go Live.');">
+                            @csrf
+                            <button type="submit" class="btn btn-warning"><i class="fa fa-pause mr-1"></i> Enable Maintenance</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('admin.update_settings') }}" enctype="multipart/form-data">
         @csrf
 

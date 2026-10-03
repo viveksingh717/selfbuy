@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use App\Http\Middleware\AdminAuthenticate;
+use App\Support\DatabaseUnavailable;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\AdminRedirectIfAuthenticated;
@@ -20,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
             SecurityHeaders::class,
             TrackLastSeen::class,
         ]);
+
+        // Same maintenance check, plus the paths that stay open (admin, payments).
+        $middleware->replace(
+            \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+            \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        );
 
         $middleware->alias([
             'adminAuth'=>AdminAuthenticate::class,
@@ -43,5 +51,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Database down / unreachable / timed out -> friendly 503 page that retries,
+        // instead of a generic 500. The error is still reported (log + Bugsnag) as usual.
+        // With APP_DEBUG=true (local) the normal debug page is kept for the stack trace.
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if (config('app.debug') || ! DatabaseUnavailable::matches($e)) {
+                return null; // let Laravel handle it normally
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Service temporarily unavailable. Please try again shortly.'], 503)
+                    ->header('Retry-After', '30');
+            }
+
+            return response()->view('errors.503', ['reason' => 'database'], 503)
+                ->header('Retry-After', '30');
+        });
     })->create();

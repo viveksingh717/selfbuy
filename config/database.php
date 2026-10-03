@@ -59,6 +59,9 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                // Give up connecting after N seconds instead of hanging the page when the
+                // database server doesn't answer; the visitor then gets the friendly 503 page.
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
             ]) : [],
         ],
 
