@@ -73,7 +73,7 @@ With `MAIL_MAILER=log` (the local default), login OTP codes and all emails are w
 | --------------------------- | ---------------- | ------------------------------ | --------------------------- |
 | URL                         | `selfbuy.test`   | `staging.selfbuy.live`         | `selfbuy.live`              |
 | Git branch                  | any              | `develop`                      | `master`                    |
-| Deployed                    | -                | automatically on push          | manually (Run workflow)     |
+| Deployed                    | -                | automatically on push          | on merge, after approval    |
 | Database                    | local            | its own copy                   | live                        |
 | Emails                      | log              | sent ("SelfBuy Staging")       | sent                        |
 | Force `https://` URLs       | off              | on (`APP_FORCE_HTTPS=true`)    | on (automatic)              |
@@ -93,8 +93,8 @@ Workflow: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 | ---------------------------------------- | ------------------------------------------------ |
 | Pull request to `develop` / `master`     | build + tests                                    |
 | Push to `develop`                        | build + tests → **deploy to staging**            |
-| Push / merge to `master`                 | build + tests only                               |
-| Actions → CI/CD → **Run workflow** (`master`) | build + tests → **deploy to production**    |
+| Merge PR into `master`                   | build + tests → **deploy to production** (waits for approval) |
+| Actions → CI/CD → **Run workflow** (`master`) | re-deploy production (also waits for approval) |
 
 - **Build & test:** PHP 8.4 + a throw-away MySQL 8, `npm run build`, migrations on an empty database, `php artisan test`.
 - **Deploy (over SSH):** maintenance page on → `git reset --hard` to the tested commit → `composer install --no-dev` → upload the built CSS/JS with rsync → `migrate --force` → `optimize` → maintenance page off. If an admin had already switched maintenance on, the site stays offline after the deploy.
@@ -103,10 +103,10 @@ Workflow: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 Release flow:
 
 ```
-develop  ──push──▶  staging (auto)  ──test──▶  PR develop → master  ──merge──▶  Run workflow  ──▶  production
+develop  ──push──▶  staging (auto)  ──test──▶  PR develop → master  ──merge──▶  Approve  ──▶  production
 ```
 
-Required GitHub settings: repository secrets `SSH_HOST`, `SSH_PORT`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, and environments `staging` / `production` (limited to `develop` / `master`) each with a `DEPLOY_PATH` variable.
+Required GitHub settings: repository secrets `SSH_HOST`, `SSH_PORT`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, and environments `staging` / `production` (limited to `develop` / `master`) each with a `DEPLOY_PATH` variable. `production` has **Required reviewers** (the approval step), and a ruleset on `master` requires a pull request with a passing "Build & test" check.
 
 ## Maintenance mode and error pages
 

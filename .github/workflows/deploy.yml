@@ -2,9 +2,12 @@
 # SelfBuy CI/CD
 #
 #   push to develop          -> test -> deploy STAGING     (automatic)
-#   push / merge to master   -> test only                  (production untouched)
-#   "Run workflow" on master -> test -> deploy PRODUCTION  (manual = your approval)
+#   merge PR into master     -> test -> deploy PRODUCTION  (waits for your "Approve")
+#   "Run workflow" on master -> test -> deploy PRODUCTION  (re-deploy, also needs approval)
 #   pull request             -> test only                  (see ✅/❌ before merging)
+#
+# The approval comes from Settings > Environments > production > Required reviewers;
+# master itself only accepts changes through a PR with a green "Build & test" (ruleset).
 #
 # Secrets (Settings > Secrets and variables > Actions):
 #   SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS
@@ -125,9 +128,11 @@ jobs:
     name: Deploy to ${{ github.ref_name == 'master' && 'production' || 'staging' }}
     needs: test # only runs if the tests passed
     runs-on: ubuntu-latest
-    # develop: every push.  master: only the manual "Run workflow" button.
+    # develop: every push -> staging.  master: every merge (or the Run workflow button)
+    # -> production, which pauses until a required reviewer approves it.
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
     environment:
       name: ${{ github.ref_name == 'master' && 'production' || 'staging' }}

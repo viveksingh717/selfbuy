@@ -232,7 +232,7 @@ Web root         public_html -> selfbuy/public       public_html -> selfbuy/publ
 Database         u279378759_selfbuy                  u279378759_staging
 APP_ENV          production                          staging
 Emails           sent                                sent, sender "SelfBuy Staging"
-Deploy           Actions > CI/CD > Run workflow      automatic on push to develop
+Deploy           on merge to master + Approve        automatic on push to develop
 
 - Each site is a separate Hostinger "website" (own PHP settings, SSL, folder).
   Staging was NOT made with Domains > Subdomains: that form only allows folders
@@ -253,15 +253,17 @@ Hostinger limits (shared hosting) and the workarounds:
 - MySQL 8 dumps from the Mac: add --set-gtid-purged=OFF --no-tablespaces and skip the
   telescope_* tables, otherwise phpMyAdmin stops with "BINLOG ADMIN privilege".
 
-GitHub (repo is PRIVATE):
+GitHub (repo is PUBLIC - never commit secrets or server details):
 - Server -> GitHub: read-only deploy key ~/.ssh/github_deploy on the server
   ("hostinger-server" in repo Settings > Deploy keys). Both sites use it.
 - GitHub Actions -> server: key "github-actions" (added in hPanel > SSH Keys).
 - Repo secrets: SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS.
 - Environments: production (branch master), staging (branch develop),
   each with variable DEPLOY_PATH.
-- Free plan + private repo = no "required reviewers" and no branch protection.
-  The manual "Run workflow" click is the production approval.
+- Repo is PUBLIC (since 04 Oct 2026) -> free extras are on:
+  production environment has Required reviewers (you approve every production deploy),
+  ruleset "protect-master": PR required (0 approvals), "Build & test" must pass,
+  no force pushes, no deletion. Direct pushes to master are rejected.
 
 What a deploy does (.github/workflows/deploy.yml):
   build CSS/JS + tests on a fresh MySQL -> SSH -> maintenance on (kept on if an admin
@@ -289,7 +291,8 @@ Third-party settings per site:
 2. CI deploys staging -> test on staging.selfbuy.live
 3. GitHub: Pull request develop -> master ("Release: ..."), tests must be green,
    review "Files changed", Merge (merge commit, keep the develop branch)
-4. Actions > CI/CD > Run workflow (master) -> production
+4. The merge starts the production deploy -> it waits -> Review deployments >
+   Approve and deploy. (Actions > CI/CD > Run workflow on master = re-deploy.)
 5. Locally: git checkout master && git pull; git checkout develop && git pull
 
 New migration? Test it on staging first - it runs on production only after step 4.
@@ -302,8 +305,9 @@ New .env key? Add it to .env.example AND to both servers' .env before deploying.
 04 Oct 2026
 - Staging environment (staging.selfbuy.live, develop branch, own database).
 - CI/CD with GitHub Actions: tests on every push/PR, auto deploy to staging,
-  manual deploy to production, deploy logging + failure diagnostics.
-- Repo made private; server pulls with a read-only deploy key.
+  production deploy on merge after approval, deploy logging + failure diagnostics.
+- Server pulls with a read-only deploy key; repo made public again with
+  production approvals + master branch protection.
 - Fixed duplicate migrations (sessions; earlier contact_us) - a fresh database
   now migrates cleanly (needed for CI and AWS).
 - Admin maintenance mode switch; branded error pages; friendly database-down
