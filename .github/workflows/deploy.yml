@@ -1,0 +1,275 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SelfBuy CI/CD
+#
+#   push to develop          -> test -> deploy STAGING     (automatic)
+#   push / merge to master   -> test only                  (production untouched)
+#   "Run workflow" on master -> test -> deploy PRODUCTION  (manual = your approval)
+#   pull request             -> test only                  (see ✅/❌ before merging)
+#
+# Secrets (Settings > Secrets and variables > Actions):
+#   SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS
+# Environment variables (Settings > Environments > staging / production):
+#   DEPLOY_PATH - the Laravel folder on the server for that site
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI/CD
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+    branches: [develop, master]
+  workflow_dispatch: # the "Run workflow" button in the Actions tab
+
+# Never run two deploys to the same site at once; a newer push waits for the running one.
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Build the CSS/JS and run the tests on a fresh database ──────────────
+  test:
+    name: Build & test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql: # a throw-away MySQL just for the tests
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: selfbuy_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: selfbuy_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.4 (same as the server)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, zip, intl, bcmath, mbstring, pdo_mysql, exif, fileinfo
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install PHP packages (with dev tools, for the tests)
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build CSS/JS (Vite)
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: Run tests
+        run: php artisan test
+
+      # If the build or tests failed, keep Laravel's log as a downloadable file on the run page.
+      - name: Save Laravel logs (only if something failed)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: storage/logs/
+          retention-days: 7
+
+      # Hand the built CSS/JS to the deploy job, so the server gets exactly what was tested.
+      - name: Save built assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: public/build
+          retention-days: 7
+
+  # ── 2. Deploy to the server (staging or production) ────────────────────────
+  deploy:
+    name: Deploy to ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+    needs: test # only runs if the tests passed
+    runs-on: ubuntu-latest
+    # develop: every push.  master: only the manual "Run workflow" button.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
+    environment:
+      name: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+      url: ${{ github.ref_name == 'master' && 'https://selfbuy.live' || 'https://staging.selfbuy.live' }}
+
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      BRANCH: ${{ github.ref_name }}
+      ENV_NAME: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+      COMMIT: ${{ github.sha }}
+      ACTOR: ${{ github.actor }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: Get the built CSS/JS from the test job
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: public/build
+
+      - name: Set up the SSH key
+        id: ssh
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<EOF
+          Host server
+            HostName ${{ secrets.SSH_HOST }}
+            Port ${{ secrets.SSH_PORT }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking yes
+          EOF
+
+      # Every remote step below:
+      #   - prints timestamped "▶" markers, folded into sections in the GitHub log
+      #   - appends to storage/logs/deploy.log on the server (deploy history, kept between deploys)
+      - name: Server info + maintenance mode on + update code + PHP packages
+        run: |
+          ssh server "DEPLOY_PATH='$DEPLOY_PATH' BRANCH='$BRANCH' ENV_NAME='$ENV_NAME' COMMIT='$COMMIT' ACTOR='$ACTOR' RUN_URL='$RUN_URL' bash -s" <<'REMOTE'
+          set -euo pipefail
+          log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+          step() { echo "::endgroup::"; echo "::group::$*"; log "▶ $*"; }
+          cd "$DEPLOY_PATH"
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] START   env=$ENV_NAME branch=$BRANCH commit=${COMMIT:0:7} by=$ACTOR run=$RUN_URL" >> storage/logs/deploy.log
+
+          echo "::group::Server info (before deploy)"
+          log "▶ Server info"
+          echo "Path:        $DEPLOY_PATH"
+          echo "PHP:         $(php -r 'echo PHP_VERSION;')"
+          echo "Composer:    $(composer --version 2>/dev/null | head -1)"
+          echo "Current:     $(git log -1 --format='%h %s (%cr)')"
+          echo "Deploying:   ${COMMIT:0:7} from $BRANCH (triggered by $ACTOR)"
+          echo "Maintenance: $([ -f storage/framework/down ] && echo ON || echo off)"
+
+          # If an admin already switched maintenance on, remember it and leave it on afterwards.
+          step "Maintenance mode on"
+          if [ -f storage/framework/down ]; then
+            touch storage/framework/.keep-down-after-deploy
+            log "Site was already in maintenance mode - it will stay offline after the deploy."
+          else
+            php artisan down --render="errors::503" --retry=60
+          fi
+
+          # Make the server copy exactly match GitHub (server edits to tracked files are discarded;
+          # .env, vendor, storage and public/build are not tracked, so they are kept).
+          step "Update code to ${COMMIT:0:7}"
+          git fetch origin "$BRANCH"
+          git reset --hard "origin/$BRANCH"
+          log "Now at: $(git log -1 --format='%h %s')"
+
+          # No scripts: proc_open is disabled on this host, package:discover is run directly instead.
+          step "Install PHP packages"
+          composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
+          php artisan package:discover --ansi
+          echo "::endgroup::"
+          REMOTE
+
+      - name: Upload the built CSS/JS
+        run: |
+          echo "▶ Uploading public/build ($(find public/build -type f | wc -l) files)"
+          rsync -az --delete --stats public/build/ "server:$DEPLOY_PATH/public/build/" > rsync.log
+          grep -E "Number of (regular )?files transferred|Total transferred file size" rsync.log || cat rsync.log
+
+      - name: Migrate + cache + maintenance mode off
+        run: |
+          ssh server "DEPLOY_PATH='$DEPLOY_PATH' ENV_NAME='$ENV_NAME' COMMIT='$COMMIT' ACTOR='$ACTOR' bash -s" <<'REMOTE'
+          set -euo pipefail
+          log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+          step() { echo "::endgroup::"; echo "::group::$*"; log "▶ $*"; }
+          cd "$DEPLOY_PATH"
+
+          echo "::group::Database migrations"
+          log "▶ Database migrations"
+          php artisan migrate --force
+
+          step "Rebuild caches (config, routes, views, events)"
+          php artisan optimize
+
+          step "Maintenance mode off"
+          if [ -f storage/framework/.keep-down-after-deploy ]; then
+            rm storage/framework/.keep-down-after-deploy
+            RESULT="SUCCESS (left in maintenance mode - it was on before the deploy)"
+            log "Site left in maintenance mode because it was on before. Use Admin > System Settings > Go Live."
+          else
+            php artisan up
+            RESULT="SUCCESS"
+          fi
+          echo "::endgroup::"
+
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] $RESULT env=$ENV_NAME commit=${COMMIT:0:7} by=$ACTOR" >> storage/logs/deploy.log
+          log "✅ Deploy finished: $RESULT"
+          REMOTE
+
+      # Collects everything needed to find the cause, straight into the GitHub log.
+      # The site is left on the maintenance page (safer than half-updated code).
+      - name: Diagnostics (only if the deploy failed)
+        if: failure() && steps.ssh.outcome == 'success'
+        run: |
+          echo "::error::Deploy to $ENV_NAME failed - the site is probably still showing the maintenance page. Diagnostics below."
+          ssh server "DEPLOY_PATH='$DEPLOY_PATH' ENV_NAME='$ENV_NAME' COMMIT='$COMMIT' ACTOR='$ACTOR' RUN_URL='$RUN_URL' bash -s" <<'REMOTE' || true
+          cd "$DEPLOY_PATH" || exit 0
+          echo "[$(date '+%Y-%m-%d %H:%M:%S')] FAILED  env=$ENV_NAME commit=${COMMIT:0:7} by=$ACTOR run=$RUN_URL" >> storage/logs/deploy.log
+          echo "::group::Server state"
+          echo "Code now at: $(git log -1 --format='%h %s' 2>&1)"
+          echo "Maintenance: $([ -f storage/framework/down ] && echo ON || echo off)"
+          echo "Uncommitted server changes:"; git status --short 2>&1 | head -20
+          echo "::endgroup::"
+          echo "::group::Last 60 lines of the Laravel log"
+          LOGFILE=$(ls -t storage/logs/laravel*.log 2>/dev/null | head -1)
+          [ -n "$LOGFILE" ] && { echo "($LOGFILE)"; tail -n 60 "$LOGFILE"; } || echo "No Laravel log found."
+          echo "::endgroup::"
+          echo "::group::Recent deploy history (storage/logs/deploy.log)"
+          tail -n 15 storage/logs/deploy.log
+          echo "::endgroup::"
+          REMOTE
+          echo "To bring the site back without a fix:  ssh in -> cd $DEPLOY_PATH && php artisan up"
+          echo "After fixing: push again, or re-run this workflow (Re-run jobs button)."
+
+      # A short card at the top of the run page - visible without opening any logs.
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### ${{ job.status == 'success' && '✅' || '❌' }} Deploy to $ENV_NAME: ${{ job.status }}"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Site | ${{ github.ref_name == 'master' && 'https://selfbuy.live' || 'https://staging.selfbuy.live' }} |"
+            echo "| Branch | \`$BRANCH\` |"
+            echo "| Commit | [\`${COMMIT:0:7}\`](${{ github.server_url }}/${{ github.repository }}/commit/$COMMIT) |"
+            echo "| Triggered by | @$ACTOR (${{ github.event_name }}) |"
+            echo "| Server path | \`$DEPLOY_PATH\` |"
+            echo ""
+            echo "Server deploy history: \`storage/logs/deploy.log\`"
+          } >> "$GITHUB_STEP_SUMMARY"
