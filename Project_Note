@@ -221,7 +221,7 @@ LogDNAService: not used anywhere. Safe to delete later.
 =====================================================================
 
 Hostinger Premium (12 months, expires 2027-10-02), server in Mumbai (in-mum-web1835).
-SSH:  ssh selfbuy  (~/.ssh/config on the Mac -> 147.93.101.12, port 65002, user u279378759)
+SSH:  ssh selfbuy  (connection details in ~/.ssh/config on the Mac and hPanel > SSH Access)
 Free domain selfbuy.live (renew the DOMAIN yearly even after moving to AWS).
 
                  PRODUCTION                          STAGING
@@ -331,8 +331,8 @@ New .env key? Add it to .env.example AND to both servers' .env before deploying.
 =====================================================================
 
 Security / live site:
-- Change both admin passwords on production (the old seeder password "password"
-  is still in git history). Staging has the passwords of the 04 Oct copy.
+- Admin passwords: use strong, unique passwords on production and staging
+  (never the seeder defaults).
 - Google Safe Browsing flagged selfbuy.live ("Deceptive pages") - review requested
   in Search Console; check the result there.
 - Staging .env: add SESSION_SECURE_COOKIE=true.

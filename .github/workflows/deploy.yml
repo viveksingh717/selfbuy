@@ -16,6 +16,12 @@ name: CI/CD
 on:
   push:
     branches: [develop, master]
+    # Docs-only pushes don't need a build or deploy. (Not applied to pull requests, so a
+    # docs-only PR still gets its "Build & test" check if branch protection requires it.)
+    paths-ignore:
+      - '**.md'
+      - 'Project_Note'
+      - 'docs/**'
   pull_request:
     branches: [develop, master]
   workflow_dispatch: # the "Run workflow" button in the Actions tab
@@ -61,11 +67,18 @@ jobs:
           extensions: gd, zip, intl, bcmath, mbstring, pdo_mysql, exif, fileinfo
           coverage: none
 
+      # Ask Composer where its cache really is (on GitHub's Ubuntu runners it's
+      # ~/.cache/composer, not ~/.composer) so packages aren't downloaded on every run.
+      - name: Find Composer cache folder
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
       - name: Cache Composer packages
         uses: actions/cache@v4
         with:
-          path: ~/.composer/cache/files
-          key: composer-${{ hashFiles('composer.lock') }}
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
 
       - name: Install PHP packages (with dev tools, for the tests)
         run: composer install --no-interaction --prefer-dist --no-progress
