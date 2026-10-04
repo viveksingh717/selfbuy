@@ -1,5 +1,15 @@
-SELFBUY - PROJECT NOTES
-Last updated: 02 Oct 2026 (Laravel 12.69, PHP 8.4 local)
+SELFBUY - PROJECT NOTES (Vivek Singh)
+Last updated: 04 Oct 2026 (Laravel 12.69, PHP 8.4 local + server)
+
+Contents:
+  1. Database tables
+  2. How the main features work
+  3. Environment notes
+  4. Hosting, servers and CI/CD (current setup)
+  5. Daily workflow
+  6. Change log
+  7. To do / known items
+  8. AWS plan (later)
 
 =====================================================================
 1. DATABASE TABLES (actual columns, created_at/updated_at left out)
@@ -73,10 +83,19 @@ otps:
 id, user_id, purpose, otp_hash, attempts, expires_at, consumed_at
 
 users:
-id, name, email, email_verified_at, password, phone_number, address,
+id, name, email (UNIQUE), email_verified_at, password,
+phone_number (UNIQUE, stored without spaces/dashes/brackets), address,
 address_line1, address_line2, city, state, postal_code, country,
 profile_photo, status, role_type, terms, is_verified, remember_token,
 welcome_coupon_id, last_seen_at
+-> role_type: 1 = admin, 0 = customer (no other value is used).
+-> Admins and customers share this table.
+
+home_settings (ONE row, edited in Admin > Home Settings):
+section headings, sign-up offer, newsletter popup, side_banner_1_*/side_banner_2_*
+(image, subtitle, title, button_text, button_link), about_image_front/back.
+Carousel slides = home_slides table, partner logos = home_partners table.
+-> Image columns empty = the bundled placeholder image is shown.
 
 =====================================================================
 2. HOW THE MAIN FEATURES WORK
@@ -101,6 +120,15 @@ Guest -> login merge:
 - On OTP login (OtpController::verify) the guest cart + wishlist move to the user.
 - Guest orders are linked to the account by email (safe because OTP proved the email).
 
+Accounts - one per email and one per phone number:
+- Email: unique index + validation everywhere (register, my account, admin
+  profile, checkout "create account"). MySQL compares case-insensitively.
+- Phone: User::normalizePhone() strips spaces/dashes/brackets before saving
+  (model mutator) and before validating, so "98765 43210" = "9876543210".
+  Unique index + validation in the same places. Format: 7-15 digits, optional "+".
+  Limit: "+919876543210" and "9876543210" still count as different numbers.
+- Google login reuses the account with the same email instead of creating a new one.
+
 Placing an order (OrderService::createOrder):
 - DB::transaction + lockForUpdate() on stock rows -> no overselling when two
   people buy the last item at the same time. Any failure = full rollback.
@@ -123,27 +151,63 @@ Exports (ExportService):
   UTF-8 BOM at the start so Excel shows the rupee sign correctly.
 - PDF via dompdf, max 1000 rows (PDF_ROW_LIMIT) - use CSV for more.
 
+Home page content (HomeSettingService):
+- schema() drives the admin form: add a field there + a migration column and it
+  appears in Admin > Home Settings automatically (tabs, labels, validation).
+- home_setting('key'), home_asset('key') (upload or placeholder), home_link('link').
+- home_link(): empty or "#" -> fallback link (Shop Now buttons fall back to /products).
+
+Maintenance mode (Admin > System Settings, or artisan down / up):
+- Admin\MaintenanceController runs artisan down/up in-process (works without proc_open).
+- Paths that stay open: Http\Middleware\PreventRequestsDuringMaintenance
+  ($except = admin, admin/*, webhooks/*, payment/*). Kept in that class on purpose:
+  "artisan down" copies the list into storage/framework/down, so the pre-rendered
+  page (served before Laravel boots) lets them through from admin, terminal or CI.
+- Each enable creates a new 32-char secret -> private preview link shown in admin.
+- Yellow reminder bar on every admin page while the store is offline.
+
+Error pages + database outages:
+- resources/views/errors/*.blade.php (404, 403, 419, 429, 500, 503) use their own
+  layout (errors/layout) - no database, no Vite, no site header - so they still work
+  when those are broken. Dark-mode logo via <picture>.
+- 503 has two texts: maintenance (default) and $reason = 'database'. Both reload every 30s.
+- Support\DatabaseUnavailable + the render() handler in bootstrap/app.php: a refused /
+  lost / timed-out DB connection -> 503 "temporarily unavailable" (JSON for AJAX)
+  instead of 500. A bad SQL query is still a 500 (that's a bug, not an outage).
+  Only when APP_DEBUG=false - locally you still get the debug page.
+- config/database.php: PDO::ATTR_TIMEOUT = DB_CONNECT_TIMEOUT (default 5s).
+
+Admin form buttons (public/admin_assets/js/form-loading.js):
+- Normal (page-reload) forms: clicked button shows spinner + "Processing...",
+  other submit buttons disabled. AJAX forms, GET filters and cancelled confirms
+  are left alone. Opt out with <form data-no-loading> (needed for POST downloads).
+
 =====================================================================
-3. ENVIRONMENT / PRODUCTION NOTES
+3. ENVIRONMENT NOTES
 =====================================================================
 
 - Only ONE env template: .env.example. Local values; every line that must
-  change on the server has a "# PRODUCTION:" comment above it.
+  change on a server has a "# PRODUCTION:" comment above it.
 - AppServiceProvider::configureEnvironment() = the place for local vs live behaviour:
     production -> https:// links forced, migrate:fresh / db:wipe blocked.
-- APP_DEBUG is NOT automatic. Must be false on the server.
+  Staging is NOT production -> set APP_FORCE_HTTPS=true (and SESSION_SECURE_COOKIE=true)
+  in staging's .env yourself.
+- APP_DEBUG is NOT automatic. Must be false on every server.
 - Mail must be real SMTP on the server - login OTP is sent by email.
-- After any .env change on the server: php artisan optimize
+- After any .env change on a server: php artisan optimize
+  (when config is cached, env() returns null outside config files).
 - Telescope (dev package) only loads when APP_ENV=local.
-- Do NOT run plain "db:seed" on production (demo data + default admin
-  password). Seed only AdminUserSeeder, PageSettingSeeder, SystemSettingSeeder,
-  then change the admin password.
+- Seeders: never plain "db:seed" on a live database (demo data). AdminUserSeeder needs
+  ADMIN_SEED_PASSWORD (12+ chars) in .env - put it there only while seeding.
+- QUEUE_CONNECTION=sync (no worker on shared hosting), no scheduled tasks, no cron.
 
 Payment URLs:
 - In config/services.php (not hardcoded in gateway classes).
 - Still TEST/SANDBOX mode. To go live: live keys + PAYPAL_SANDBOX=false
   + INSTAMOJO_SANDBOX=false. No code change.
-- Re-create webhooks with the live domain: /webhooks/{razorpay|stripe|paypal|instamojo}
+- Webhooks: /webhooks/{razorpay|stripe|paypal|instamojo}, one per site.
+  In test mode the gateways send events to ALL webhooks -> each site ignores
+  payments it doesn't know (just a log line).
 
 Bugsnag (error monitoring):
 - Server .env: LOG_STACK=daily,bugsnag + BUGSNAG_API_KEY
@@ -153,8 +217,106 @@ Bugsnag (error monitoring):
 LogDNAService: not used anywhere. Safe to delete later.
 
 =====================================================================
-4. CHANGE LOG
+4. HOSTING, SERVERS AND CI/CD (current setup)
 =====================================================================
+
+Hostinger Premium (12 months, expires 2027-10-02), server in Mumbai (in-mum-web1835).
+SSH:  ssh selfbuy  (~/.ssh/config on the Mac -> 147.93.101.12, port 65002, user u279378759)
+Free domain selfbuy.live (renew the DOMAIN yearly even after moving to AWS).
+
+                 PRODUCTION                          STAGING
+URL              https://selfbuy.live                https://staging.selfbuy.live
+Branch           master                              develop
+Code folder      ~/domains/selfbuy.live/selfbuy      ~/domains/staging.selfbuy.live/selfbuy
+Web root         public_html -> selfbuy/public       public_html -> selfbuy/public
+Database         u279378759_selfbuy                  u279378759_staging
+APP_ENV          production                          staging
+Emails           sent                                sent, sender "SelfBuy Staging"
+Deploy           Actions > CI/CD > Run workflow      automatic on push to develop
+
+- Each site is a separate Hostinger "website" (own PHP settings, SSL, folder).
+  Staging was NOT made with Domains > Subdomains: that form only allows folders
+  inside public_html, which is a link into production's public/ folder.
+- PHP 8.4, memory_limit 512M, uploads 20M - set per website in hPanel.
+- Staging data is a COPY of production taken on 04 Oct 2026. It drifts over time.
+  Refresh staging from production (replaces all staging data):
+    mysqldump -u <prod_db_user> -p --single-transaction --no-tablespaces u279378759_selfbuy > ~/staging-copy.sql
+    mysql -u <staging_db_user> -p u279378759_staging < ~/staging-copy.sql
+    rm ~/staging-copy.sql
+  Data never moves between the sites by itself - only code does (through git).
+
+Hostinger limits (shared hosting) and the workarounds:
+- proc_open disabled -> composer install --no-scripts, then php artisan package:discover
+                        (php artisan about also fails; use config:show / env instead)
+- symlink() disabled -> ln -s ../storage/app/public public/storage (not storage:link)
+- No sudo, SSH only inside the home folder.
+- MySQL 8 dumps from the Mac: add --set-gtid-purged=OFF --no-tablespaces and skip the
+  telescope_* tables, otherwise phpMyAdmin stops with "BINLOG ADMIN privilege".
+
+GitHub (repo is PRIVATE):
+- Server -> GitHub: read-only deploy key ~/.ssh/github_deploy on the server
+  ("hostinger-server" in repo Settings > Deploy keys). Both sites use it.
+- GitHub Actions -> server: key "github-actions" (added in hPanel > SSH Keys).
+- Repo secrets: SSH_HOST, SSH_PORT, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS.
+- Environments: production (branch master), staging (branch develop),
+  each with variable DEPLOY_PATH.
+- Free plan + private repo = no "required reviewers" and no branch protection.
+  The manual "Run workflow" click is the production approval.
+
+What a deploy does (.github/workflows/deploy.yml):
+  build CSS/JS + tests on a fresh MySQL -> SSH -> maintenance on (kept on if an admin
+  had switched it on) -> git reset --hard to the tested commit -> composer install
+  --no-dev --no-scripts + package:discover -> rsync public/build -> migrate --force
+  -> optimize -> maintenance off.
+- Deploy history on each server: storage/logs/deploy.log (START / SUCCESS / FAILED).
+- Failed deploy: site stays on the maintenance page, "Diagnostics" step shows the
+  last Laravel log lines. Fix + push, or "Re-run jobs". Emergency: php artisan up.
+- git reset --hard discards edits made directly on the server to tracked files.
+  Never edit code on the server - only .env, through SSH / File Manager.
+
+Third-party settings per site:
+- Google OAuth client: redirect URIs for selfbuy.live, staging.selfbuy.live and
+  http://127.0.0.1:8000 (local). Each .env: GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback".
+  Locally open the site at http://127.0.0.1:8000 (Google rejects .test domains).
+- Webhooks registered in Stripe / Razorpay / PayPal for both sites, separate secrets.
+- Email: no-reply@selfbuy.live (Hostinger mail), smtp.hostinger.com:465 ssl.
+
+=====================================================================
+5. DAILY WORKFLOW
+=====================================================================
+
+1. git checkout develop, work + test locally, commit, push
+2. CI deploys staging -> test on staging.selfbuy.live
+3. GitHub: Pull request develop -> master ("Release: ..."), tests must be green,
+   review "Files changed", Merge (merge commit, keep the develop branch)
+4. Actions > CI/CD > Run workflow (master) -> production
+5. Locally: git checkout master && git pull; git checkout develop && git pull
+
+New migration? Test it on staging first - it runs on production only after step 4.
+New .env key? Add it to .env.example AND to both servers' .env before deploying.
+
+=====================================================================
+6. CHANGE LOG
+=====================================================================
+
+04 Oct 2026
+- Staging environment (staging.selfbuy.live, develop branch, own database).
+- CI/CD with GitHub Actions: tests on every push/PR, auto deploy to staging,
+  manual deploy to production, deploy logging + failure diagnostics.
+- Repo made private; server pulls with a read-only deploy key.
+- Fixed duplicate migrations (sessions; earlier contact_us) - a fresh database
+  now migrates cleanly (needed for CI and AWS).
+- Admin maintenance mode switch; branded error pages; friendly database-down
+  page + DB connect timeout.
+- Phone numbers unique + normalized; duplicate email/phone checks at checkout.
+- Admin form buttons show a processing state.
+- AdminUserSeeder password moved to ADMIN_SEED_PASSWORD (.env).
+
+03 Oct 2026
+- Went live on Hostinger (selfbuy.live).
+- Home side banners + About images editable in admin; "No image" placeholder;
+  Shop Now links fixed; blog links and currency/language switchers hidden.
+- Team photos same size on the About page.
 
 02 Oct 2026
 - Upgraded Laravel 11.56 -> 12.69 (fixes 4 security advisories, incl. a
@@ -165,63 +327,73 @@ LogDNAService: not used anywhere. Safe to delete later.
   Telescope local-only, .env.example production notes, committed APP_KEY removed.
 
 =====================================================================
-5. TO DO / KNOWN ITEMS
+7. TO DO / KNOWN ITEMS
 =====================================================================
 
-- Test after upgrade: OTP login, COD + one test-gateway order,
-  admin status change, invoice + PDF/CSV export.
+Security / live site:
+- Change both admin passwords on production (the old seeder password "password"
+  is still in git history). Staging has the passwords of the 04 Oct copy.
+- Google Safe Browsing flagged selfbuy.live ("Deceptive pages") - review requested
+  in Search Console; check the result there.
+- Staging .env: add SESSION_SECURE_COOKIE=true.
+- Clean up test users on production: ids 13 and 56 (test accounts),
+  ids 2 and 51 have role_type 2 (unused value) -> set to 1 or delete.
+
+Content (Admin):
+- Real links for each carousel slide (Home Settings > Carousel).
+- Own images for side banners + About page (Home Settings > Side Banners / About Page).
+- Contact details (System Settings > Contact).
+
+Code:
+- Blog page still has template content (links hidden, /blog still reachable).
+- Notifications store full URLs -> data copied between sites keeps the old domain.
+  Storing only the path would avoid it.
+- 34 views use asset('storage/...') for uploads -> change to Storage::url() before S3.
 - If hosted behind Cloudflare / a load balancer: add
   $middleware->trustProxies(at: '*') in bootstrap/app.php.
 - ExportService line 27: fputcsv() PHP 8.4 deprecation notice (harmless).
 - resources/views/emails/templates/test_email.blade.php has a hardcoded
   http://selfbuy.com link (template not used).
 - SMS_DRIVER=log writes OTPs to the log file; switch to msg91 when keys are ready.
-- Test suite has only 2 tests - add feature tests for cart / checkout.
+- Test suite has only 2 tests - add feature tests for cart / checkout / payments
+  (CI already runs them on every push).
+- Leftover admin-only /test route in routes/web.php.
 
 =====================================================================
-6. DEPLOYMENT PLAN (added 02 Oct 2026)
+8. AWS PLAN (later)
 =====================================================================
 
-Goal: host temporarily NOW for showcase, move to AWS LATER (still learning AWS).
+Same repo, same code - mostly .env changes. The GitHub Actions workflow works for
+EC2 too: change the secrets (host, user, key) and DEPLOY_PATH.
 
-Phase 1 - Temporary hosting (showcase):
-- CHOSEN: Hostinger (shared/cloud plan with SSH).
-- Use a plain Ubuntu server: Oracle Cloud Always Free (free) or a
-  $4-6/month VPS (Hetzner / DigitalOcean). Hostinger shared = easiest fallback.
-- Avoid InfinityFree-type hosts: bot wall blocks webhooks + API, no SSH.
-- Stack: Ubuntu + Nginx + PHP 8.4-FPM + MySQL 8 + Composer + Certbot (SSL).
-  Same stack as an EC2 server later -> everything learned here carries over.
-- Deploy from GitHub (git clone / git pull), never upload .env through git.
-- Keep payment gateways in TEST mode (visitors can use test cards).
-- Keep SMS_DRIVER=log (SMS costs money), OTP via email SMTP.
-- Demo admin account in README, ADMIN_REGISTRATION_ENABLED=false.
-- Server .env: APP_ENV=production, APP_DEBUG=false, real APP_URL,
-  QUEUE_CONNECTION=database + cron for "schedule:run" (or sync).
-
-Phase 2 - AWS (later) - what maps to what:
+What maps to what:
 - Server          -> EC2 (t3.micro / t4g.micro; new accounts since Jul 2025
                      get credits on a 6-month Free plan, not 12 months)
-- MySQL           -> RDS MySQL (free tier) or MySQL on the same EC2 at first
+- MySQL           -> RDS MySQL or MySQL on the same EC2 at first
 - Uploaded images -> S3 (+ CloudFront later)
 - Email (OTP)     -> SES (needs "production access" request to email anyone)
 - Domain / SSL    -> Route 53 + ACM (or Certbot on EC2)
 - Secrets         -> .env on server first, later SSM Parameter Store
 - Errors / logs   -> Bugsnag already set up, CloudWatch optional
 - Set AWS billing alerts (Budgets) on day 1 so free tier never surprises.
+- Never put AWS keys in the repo (private or not) - use IAM roles / GitHub OIDC.
 
 Before moving to S3:
 - Uploads use Storage::disk('public') hardcoded (FileUploadService,
   HomeSettingService, SystemSettingService, PageSettingService).
   Plan: point the 'public' disk to S3 in config/filesystems.php OR make the
   disk name come from .env. Copy storage/app/public/* to the S3 bucket.
-- Check views use Storage::url() (not asset('storage/...')) so image URLs
+- Change asset('storage/...') in views to Storage::url() so image URLs
   switch to S3 automatically.
+- Behind an AWS load balancer: trustProxies (see To do).
 
-Migration steps (Phase 1 -> AWS):
-- mysqldump from temp server -> import to RDS/EC2.
+Migration steps (Hostinger -> AWS):
+- Build the AWS server while Hostinger stays live.
+- mysqldump (--single-transaction --no-tablespaces, MySQL 8: --set-gtid-purged=OFF)
+  -> import to RDS/EC2. A fresh database also works: migrate + the 3 seeders.
 - Copy uploads to S3, update .env (DB_*, AWS_*, MAIL_* for SES, APP_URL).
-- Update webhook URLs in Razorpay/Stripe/PayPal/Instamojo + Google OAuth
-  redirect URI to the new domain.
+- Update webhook URLs + Google OAuth redirect URIs if the domain changes.
 - php artisan optimize, test checkout + OTP + image upload, then switch DNS.
+- Cancel Hostinger hosting after a few quiet days; keep renewing the domain.
 
 By Vivek Singh
