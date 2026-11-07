@@ -38,12 +38,12 @@ class SystemSettingService
             'contact' => [
                 'label'  => 'Contact',
                 'fields' => [
-                    'contact_email'     => ['type' => 'text',     'label' => 'Contact Email',   'default' => 'support@selfbuy.com'],
+                    'contact_email'     => ['type' => 'text',     'label' => 'Contact Email',   'default' => 'viveksingh@selfbuy.com'],
                     'support_email'     => ['type' => 'text',     'label' => 'Support Email',   'default' => 'support@selfbuy.com'],
-                    'contact_phone'     => ['type' => 'text',     'label' => 'Primary Phone',   'default' => '+91 90040 69694'],
-                    'contact_phone_alt' => ['type' => 'text',     'label' => 'Secondary Phone', 'default' => '+91 86899 61600'],
+                    'contact_phone'     => ['type' => 'text',     'label' => 'Primary Phone',   'default' => '+91 90070 69699'],
+                    'contact_phone_alt' => ['type' => 'text',     'label' => 'Secondary Phone', 'default' => '+91 98765 43210'],
                     'whatsapp_number'   => ['type' => 'text',     'label' => 'WhatsApp Number', 'default' => ''],
-                    'address_line'      => ['type' => 'textarea', 'label' => 'Address',         'default' => 'New Jay Om Shanti CHS, P. K. Road, Mira Bhayandar Road, Mira Road (East)'],
+                    'address_line'      => ['type' => 'textarea', 'label' => 'Address',         'default' => 'New Jay Om Shanti CHS, Mira Bhayandar Road, Mira Road (East)'],
                     'address_city'      => ['type' => 'text',     'label' => 'City',            'default' => 'Thane'],
                     'address_state'     => ['type' => 'text',     'label' => 'State',           'default' => 'Maharashtra'],
                     'address_country'   => ['type' => 'text',     'label' => 'Country',         'default' => 'India'],
