@@ -274,6 +274,14 @@
 
             <li class="g_heading">Account</li>
 
+            @if (config('auth.admin_registration'))
+                <li class="{{ Request::is('admin/register') ? 'active' : '' }}">
+                    <a href="{{ route('admin.register') }}">
+                        <i class="fa fa-user-plus"></i><span>Register User</span>
+                    </a>
+                </li>
+            @endif
+
             <li>
                 <a href="{{ route('admin.logout') }}">
                     <i class="fa fa-sign-out"></i><span>Logout</span>

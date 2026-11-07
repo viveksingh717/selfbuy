@@ -183,8 +183,6 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['adminGuest'])->group(function () {
         Route::get('/login', [AuthController::class, 'login'])->name('admin.login');
         Route::post('/login_process', [AuthController::class, 'login_process'])->name('admin.login_process')->middleware('throttle:admin-login');
-        Route::get('/register', [AuthController::class, 'register'])->name('admin.register');
-        Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process')->middleware('throttle:register');
         Route::get('/terms_condition', [AuthController::class, 'term_condition'])->name('admin.terms_condition');
         Route::get('/forget_password', [AuthController::class, 'forget_password'])->name('admin.forget_password');
         Route::post('/forget_password', [AuthController::class, 'sendResetLink'])->name('admin.password.email')->middleware('throttle:password-reset');
@@ -197,6 +195,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard/export/{format}', [DashboardController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->name('admin.dashboard.export');
         Route::get('/logout', [DashboardController::class, 'logout'])->name('admin.logout');
+
+        // Register a new admin user (only a logged-in admin can create one)
+        Route::get('/register', [AuthController::class, 'register'])->name('admin.register');
+        Route::post('/register_process', [AuthController::class, 'register_process'])->name('admin.register_process')->middleware('throttle:register');
 
         // Global admin search (header search box)
         Route::get('/search', [SearchController::class, 'index'])->name('admin.search');
