@@ -46,10 +46,5 @@
                 </div>
             </form>
         </div>
-        @if (config('auth.admin_registration'))
-            <div class="text-center text-muted auth-card-footer">
-                Don't have account yet? <a href="{{ route('admin.register') }}">Register Here!</a>
-            </div>
-        @endif
     </div>
 @endsection

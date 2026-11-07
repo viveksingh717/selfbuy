@@ -110,8 +110,8 @@ class AuthController extends Controller
         $result = $this->authService->registerAdmin($data);
 
         if ($result['success'] === true) {
-            return redirect()->route('admin.login')
-                ->with('success', $result['message']);
+            return redirect()->route('admin.register')
+                ->with('success', 'Admin user created successfully.');
         }
 
         return redirect()->back()->with('error', $result['message'])

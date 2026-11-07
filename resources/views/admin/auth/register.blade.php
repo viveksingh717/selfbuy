@@ -7,7 +7,7 @@
 @section('content')
     <div class="card">
         <div class="text-center mb-2">
-            <a class="header-brand" href="{{ route('admin.register') }}"><img src="{{ asset('selfbuy1.png') }}"
+            <a class="header-brand" href="{{ route('admin.dashboard') }}"><img src="{{ asset('selfbuy1.png') }}"
                     alt="logo" width="75" height="75" style="object-fit: contain;"></a>
 
         </div>
@@ -62,7 +62,7 @@
             </form>
         </div>
         <div class="text-center text-muted auth-card-footer">
-            Already have account? <a href="{{ route('admin.login') }}">Login Here!</a>
+            <a href="{{ route('admin.dashboard') }}">Back to Dashboard</a>
         </div>
     </div>
 @endsection
