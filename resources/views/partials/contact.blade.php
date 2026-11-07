@@ -10,6 +10,23 @@
 @endsection
 
 @section('content')
+    @php
+        // Dummy fallbacks shown only when the admin hasn't filled a field in.
+        $siteName    = setting('site_name', config('app.name'));
+        $contactMail = setting('contact_email', 'info@example.com');
+        $phones      = array_values(array_filter([
+            setting('contact_phone', '+91 98000 368369'),
+            setting('contact_phone_alt'),
+        ]));
+        $fullAddress = implode(', ', array_filter([
+            setting('address_line', '123 Sample Street'),
+            setting('address_city', 'Sample City'),
+            trim(setting('address_state', 'Sample State') . ' ' . setting('address_postcode', '4000121')),
+            setting('address_country', 'India'),
+        ]));
+        $mapsUrl = setting('google_maps_url')
+            ?: ($fullAddress ? 'https://www.google.com/maps/search/?api=1&query=' . urlencode($fullAddress) : null);
+    @endphp
     <main class="main">
         <nav aria-label="breadcrumb" class="breadcrumb-nav border-0 mb-0">
             <div class="container">
@@ -34,21 +51,29 @@
                         <div class="row">
                             <div class="col-sm-7">
                                 <div class="contact-info">
-                                    <h3>SelfBuy</h3>
+                                    <h3>{{ $siteName }}</h3>
 
                                     <ul class="contact-list">
-                                        <li>
-                                            <i class="icon-map-marker"></i>
-                                            New Jay Om Shanti CHS, P. K. Road, Mira Bhayandar Road, Mira Road (East), Thane – 401107, Maharashtra, India
-                                        </li>
-                                        <li>
-                                            <i class="icon-phone"></i>
-                                            <a href="tel:+919004069694">+91 90040 69694</a> / <a href="tel:+918689961600">+91 86899 61600</a>
-                                        </li>
-                                        <li>
-                                            <i class="icon-envelope"></i>
-                                            <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
-                                        </li>
+                                        @if ($fullAddress)
+                                            <li>
+                                                <i class="icon-map-marker"></i>
+                                                {{ $fullAddress }}
+                                            </li>
+                                        @endif
+                                        @if ($phones)
+                                            <li>
+                                                <i class="icon-phone"></i>
+                                                @foreach ($phones as $phone)
+                                                    <a href="tel:{{ preg_replace('/[^\d+]/', '', $phone) }}">{{ $phone }}</a>@if (!$loop->last) / @endif
+                                                @endforeach
+                                            </li>
+                                        @endif
+                                        @if ($contactMail)
+                                            <li>
+                                                <i class="icon-envelope"></i>
+                                                <a href="mailto:{{ $contactMail }}">{{ $contactMail }}</a>
+                                            </li>
+                                        @endif
                                     </ul><!-- End .contact-list -->
                                 </div><!-- End .contact-info -->
                             </div><!-- End .col-sm-7 -->
@@ -137,10 +162,7 @@
 
                 <hr class="mt-4 mb-5">
 
-                @php
-                    $fullAddress = 'New Jay Om Shanti CHS, P. K. Road, Mira Bhayandar Road, Mira Road East, Thane 401107, Maharashtra, India';
-                    $mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($fullAddress);
-                @endphp
+                @if ($fullAddress || $phones)
                 <div class="stores mb-4 mb-lg-5">
                     <h2 class="title text-center mb-3">Our Location</h2><!-- End .title text-center mb-2 -->
 
@@ -148,16 +170,27 @@
                         <div class="col-lg-8">
                             <div class="store">
                                 <div class="store-content text-center">
-                                    <h3 class="store-title">SelfBuy</h3><!-- End .store-title -->
-                                    <address>{{ $fullAddress }}</address>
-                                    <div><a href="tel:+919004069694">+91 90040 69694</a> / <a href="tel:+918689961600">+91 86899 61600</a></div>
+                                    <h3 class="store-title">{{ $siteName }}</h3><!-- End .store-title -->
+                                    @if ($fullAddress)
+                                        <address>{{ $fullAddress }}</address>
+                                    @endif
+                                    @if ($phones)
+                                        <div>
+                                            @foreach ($phones as $phone)
+                                                <a href="tel:{{ preg_replace('/[^\d+]/', '', $phone) }}">{{ $phone }}</a>@if (!$loop->last) / @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
 
-                                    <a href="{{ $mapsUrl }}" class="btn btn-link" target="_blank" rel="noopener"><span>View Map</span><i class="icon-long-arrow-right"></i></a>
+                                    @if ($mapsUrl)
+                                        <a href="{{ $mapsUrl }}" class="btn btn-link" target="_blank" rel="noopener"><span>View Map</span><i class="icon-long-arrow-right"></i></a>
+                                    @endif
                                 </div><!-- End .store-content -->
                             </div><!-- End .store -->
                         </div><!-- End .col-lg-8 -->
                     </div><!-- End .row -->
                 </div><!-- End .stores -->
+                @endif
             </div><!-- End .container -->
             {{-- <div id="map"></div><!-- End #map --> --}}
         </div><!-- End .page-content -->
